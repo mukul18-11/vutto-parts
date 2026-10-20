@@ -29,6 +29,7 @@ async function main(): Promise<void> {
   const options = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } };
   const admin = createClient<Database>(url, env("SUPABASE_SERVICE_ROLE_KEY"), options);
 
+  console.log(`Demo users on ${host}`);
   const sessions = await ensureDemoUsers(admin, { url, publishableKey }, env("DEMO_PASSWORD"));
 
   for (const user of DEMO_USERS) {
@@ -41,7 +42,14 @@ async function main(): Promise<void> {
   }
 }
 
+// Prints the message plus the HTTP status and code of Supabase errors; never the password or keys.
 main().catch((e: unknown) => {
-  console.error(e instanceof Error ? e.message : e);
+  if (e instanceof Error) {
+    const { status, code } = e as { status?: number; code?: string };
+    const extra = [status !== undefined && `status ${status}`, code && `code ${code}`].filter(Boolean).join(", ");
+    console.error(extra ? `${e.message} (${extra})` : e.message);
+  } else {
+    console.error(e);
+  }
   process.exit(1);
 });

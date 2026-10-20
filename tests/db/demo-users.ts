@@ -75,13 +75,44 @@ async function findUserByEmail(admin: SupabaseClient<Database>, email: string): 
   }
 }
 
-/** Signs in with a fresh client that keeps nothing on disk. Returns the session, or null. */
-export async function signIn(target: AuthTarget, email: string, password: string): Promise<Session | null> {
+export type SignInError = { message: string; status: number | undefined; code: string | undefined };
+
+/** Signs in with a fresh client that keeps nothing on disk. Returns the session or the error. */
+export async function trySignIn(
+  target: AuthTarget,
+  email: string,
+  password: string,
+): Promise<{ session: Session | null; error: SignInError | null }> {
   const client = createClient(target.url, target.publishableKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
   const { data, error } = await client.auth.signInWithPassword({ email, password });
-  return error ? null : data.session;
+  if (error) return { session: null, error: { message: error.message, status: error.status, code: error.code } };
+  return { session: data.session, error: null };
+}
+
+/** Signs in with a fresh client that keeps nothing on disk. Returns the session, or null. */
+export async function signIn(target: AuthTarget, email: string, password: string): Promise<Session | null> {
+  return (await trySignIn(target, email, password)).session;
+}
+
+/** Error message, HTTP status and code; never the password or a key. */
+function describeError(e: SignInError | null): string {
+  if (!e) return "no error";
+  return `${e.message} (status ${e.status ?? "unknown"}${e.code ? `, code ${e.code}` : ""})`;
+}
+
+/** Makes sure the user's email is confirmed (hosted projects refuse unconfirmed sign-ins). */
+async function ensureEmailConfirmed(admin: SupabaseClient<Database>, id: string): Promise<boolean> {
+  const read = async () => {
+    const { data, error } = await admin.auth.admin.getUserById(id);
+    if (error) throw error;
+    return !!data.user.email_confirmed_at;
+  };
+  if (await read()) return true;
+  const { error } = await admin.auth.admin.updateUserById(id, { email_confirm: true });
+  if (error) throw error;
+  return read();
 }
 
 /**
@@ -112,18 +143,25 @@ export async function ensureAuthUser(
     if (error) throw error;
   }
 
-  let session = await signIn(target, user.email, password);
-  if (!session) {
-    const { error } = await admin.auth.admin.updateUserById(user.id, {
-      email: user.email,
-      password,
-      email_confirm: true,
-    });
-    if (error) throw error;
-    session = await signIn(target, user.email, password);
-  }
-  if (!session) throw new Error(`Could not sign in as ${user.email} after resetting its password`);
-  return session;
+  const first = await trySignIn(target, user.email, password);
+  if (first.session) return first.session;
+
+  // The password (or the confirmation) needs repair: an admin update logs out every session, so
+  // it happens only after a failed sign-in.
+  const { error } = await admin.auth.admin.updateUserById(user.id, {
+    email: user.email,
+    password,
+    email_confirm: true,
+  });
+  if (error) throw error;
+  const confirmed = await ensureEmailConfirmed(admin, user.id);
+
+  const second = await trySignIn(target, user.email, password);
+  if (second.session) return second.session;
+  throw new Error(
+    `Could not sign in as ${user.email} after resetting its password: ${describeError(second.error)}. ` +
+      `First attempt: ${describeError(first.error)}. Email confirmed: ${confirmed}.`,
+  );
 }
 
 /** Writes the profile only if it differs (uses the service_role client). */
