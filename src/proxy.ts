@@ -33,16 +33,21 @@ export async function proxy(request: NextRequest) {
   const signedIn = Boolean(data?.claims);
   const onLogin = request.nextUrl.pathname === "/login";
 
-  if (!signedIn && !onLogin) return redirectTo(request, response, "/login");
+  if (!signedIn && !onLogin) {
+    // Come back to the requested page after sign-in (the login action accepts only same-origin paths).
+    const { pathname, search } = request.nextUrl;
+    const next = pathname === "/" ? "" : `?next=${encodeURIComponent(pathname + search)}`;
+    return redirectTo(request, response, "/login", next);
+  }
   if (signedIn && onLogin) return redirectTo(request, response, "/");
   return response;
 }
 
 // Redirect while keeping any refreshed session cookies and no-cache headers.
-function redirectTo(request: NextRequest, from: NextResponse, pathname: string) {
+function redirectTo(request: NextRequest, from: NextResponse, pathname: string, search = "") {
   const url = request.nextUrl.clone();
   url.pathname = pathname;
-  url.search = "";
+  url.search = search;
   const redirect = NextResponse.redirect(url);
   from.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
   for (const header of ["cache-control", "expires", "pragma"]) {

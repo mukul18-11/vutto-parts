@@ -3,6 +3,8 @@ import { defineConfig, devices } from "@playwright/test";
 // One e2e flow (SPEC §17): a production build of the app against local Supabase, never vercel.app.
 export default defineConfig({
   testDir: "tests/e2e",
+  // Ensures the demo users and re-applies the demo seed (local Supabase only).
+  globalSetup: "./tests/e2e/global-setup.ts",
   workers: 1,
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),

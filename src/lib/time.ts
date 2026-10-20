@@ -31,3 +31,20 @@ export function formatIST(ts: string | Date): string {
   const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value;
   return `${part("day")} ${part("month")}, ${part("hour")}:${part("minute")}`;
 }
+
+/** IST clock time such as "11:42" (for "as of HH:MM IST"). */
+export function formatISTTime(ts: string | Date): string {
+  const parts = istDateTimeParts.formatToParts(typeof ts === "string" ? new Date(ts) : ts);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value;
+  return `${part("hour")}:${part("minute")}`;
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** A date-only 'YYYY-MM-DD' value as "20 Oct 2026", read from the string (never new Date(str)). */
+export function formatDateOnly(date: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  const month = match ? MONTHS[Number(match[2]) - 1] : undefined;
+  if (!match || !month) throw new RangeError(`formatDateOnly expects YYYY-MM-DD, got ${date}`);
+  return `${Number(match[3])} ${month} ${match[1]}`;
+}

@@ -3,6 +3,8 @@ import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
+import { I18nProvider } from "@/lib/i18n/client";
+import { getLang } from "@/lib/i18n/server";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -14,13 +16,15 @@ export const metadata: Metadata = {
   description: "Spare parts inventory for Vutto workshops",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // <html lang> follows the 'lang' cookie (SPEC §14).
+  const lang = await getLang();
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)}>
+    <html lang={lang} className={cn("font-sans", geist.variable)}>
       <body className="min-h-dvh bg-background text-foreground antialiased">
-        {children}
+        <I18nProvider lang={lang}>{children}</I18nProvider>
         <Toaster />
       </body>
     </html>

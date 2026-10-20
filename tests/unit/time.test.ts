@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { formatIST, istToday } from "@/lib/time";
+import { formatDateOnly, formatIST, formatISTTime, istToday } from "@/lib/time";
 
 afterEach(() => {
   vi.useRealTimers();
@@ -30,5 +30,24 @@ describe("formatIST", () => {
 
   it("uses the IST date and a 24-hour clock across midnight", () => {
     expect(formatIST(new Date(Date.UTC(2026, 9, 19, 18, 40)))).toBe("20 Oct, 00:10");
+  });
+});
+
+describe("formatISTTime", () => {
+  it("shows the IST clock time", () => {
+    expect(formatISTTime("2026-10-18T06:12:00+00:00")).toBe("11:42");
+    expect(formatISTTime(new Date(Date.UTC(2026, 9, 19, 18, 40)))).toBe("00:10");
+  });
+});
+
+describe("formatDateOnly", () => {
+  it("formats a date-only string without a time zone shift", () => {
+    expect(formatDateOnly("2026-10-20")).toBe("20 Oct 2026");
+    expect(formatDateOnly("2026-01-01")).toBe("1 Jan 2026");
+  });
+
+  it("rejects anything that is not YYYY-MM-DD", () => {
+    expect(() => formatDateOnly("2026-13-01")).toThrow(RangeError);
+    expect(() => formatDateOnly("20 Oct")).toThrow(RangeError);
   });
 });

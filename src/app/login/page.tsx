@@ -1,37 +1,25 @@
-import { Button } from "@/components/ui/button";
+import type { Metadata } from "next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { clientEnv } from "@/env.client";
+import { getT } from "@/lib/i18n/server";
+import type { SearchParams } from "@/lib/auth";
+import { LoginForm } from "./login-form";
 
-// Placeholder: sign-in is not wired up yet.
-export default function LoginPage() {
+export const metadata: Metadata = { title: "Sign in · Vutto Parts" };
+
+export default async function LoginPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const { next } = await searchParams;
+  const t = await getT();
+
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center p-4">
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 p-4">
       <Card>
         <CardHeader>
-          <CardTitle>Vutto Parts</CardTitle>
-          <CardDescription>Sign in to your workshop.</CardDescription>
+          <CardTitle className="text-xl">{t("common.appName")}</CardTitle>
+          <CardDescription>{t("login.subtitle")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" autoComplete="username" className="h-12 text-base" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                className="h-12 text-base"
-              />
-            </div>
-            <Button type="submit" disabled className="h-12 w-full">
-              Sign in
-            </Button>
-          </form>
+          <LoginForm demoMode={clientEnv.NEXT_PUBLIC_DEMO_MODE} next={typeof next === "string" ? next : undefined} />
         </CardContent>
       </Card>
     </main>
