@@ -896,17 +896,44 @@ isOneToOne: false
             "adjust_stock":
 { Args: { "p_bin_id": string,"p_counted_qty": number,"p_expected_on_hand": number,"p_part_id": string,"p_reason": string,"p_request_id": string }; Returns: Json
                            },
+"confirm_job_card":
+{ Args: { "p_card_id": string,"p_request_id": string }; Returns: Json
+                           },
+"create_bike":
+{ Args: { "p_findings": Json,"p_mfg_year": number,"p_model_id": string,"p_reg_no": string,"p_request_id": string,"p_variant_id"?: string,"p_workshop_id": string }; Returns: Json
+                           },
+"finding_candidates":
+{ Args: { "p_finding_id": string }; Returns: {
+              "auto_pick": boolean,"confirmed_count": number,"flagged_count": number,"is_universal": boolean,"name": string,"name_hi": string,"part_id": string,"part_type": string,"qty": number,"qty_per_bike": number,"rank": number,"sku": string,"source": Database["public"]['Enums']["fitment_source"],"uom": Database["public"]['Enums']["uom"]
+            }[]
+                           },
 "health":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"line_candidates":
+{ Args: { "p_line_id": string }; Returns: {
+              "auto_pick": boolean,"confirmed_count": number,"flagged_count": number,"is_current": boolean,"is_universal": boolean,"name": string,"name_hi": string,"part_id": string,"qty_per_bike": number,"rank": number,"sku": string,"source": Database["public"]['Enums']["fitment_source"],"uom": Database["public"]['Enums']["uom"]
+            }[]
+                           },
+"mark_arrived":
+{ Args: { "p_bike_id": string,"p_request_id": string }; Returns: Json
+                           },
 "move_stock":
 { Args: { "p_from_bin_id": string,"p_part_id": string,"p_qty": number,"p_reason": string,"p_request_id": string,"p_to_bin_id": string }; Returns: Json
+                           },
+"part_candidates":
+{ Args: { "p_part_type": string,"p_variant_id": string }; Returns: {
+              "auto_pick": boolean,"confirmed_count": number,"flagged_count": number,"is_universal": boolean,"name": string,"name_hi": string,"part_id": string,"qty_per_bike": number,"rank": number,"sku": string,"source": Database["public"]['Enums']["fitment_source"],"uom": Database["public"]['Enums']["uom"]
+            }[]
                            },
 "putaway":
 { Args: { "p_from_bin_id": string,"p_part_id": string,"p_qty": number,"p_request_id": string,"p_to_bin_id": string }; Returns: Json
                            },
 "request_bin_count":
 { Args: { "p_bin_id": string,"p_request_id": string }; Returns: Json
+                           },
+"resolve_finding":
+{ Args: { "p_finding_id": string,"p_no_part_reason"?: string,"p_part_id"?: string,"p_request_id": string }; Returns: Json
                            },
 "return_to_supplier":
 { Args: { "p_bin_id": string,"p_part_id": string,"p_qty": number,"p_reason": string,"p_request_id": string }; Returns: Json
@@ -915,6 +942,21 @@ isOneToOne: false
 { Args: { "p_part_type"?: string,"p_q": string,"p_variant_id"?: string,"p_workshop_id": string }; Returns: {
               "available": number,"category": Database["public"]['Enums']["part_category"],"fits": boolean,"is_universal": boolean,"name": string,"name_hi": string,"oem_part_no": string,"part_id": string,"part_type": string,"sku": string,"uom": Database["public"]['Enums']["uom"],"usable_on_hand": number
             }[]
+                           },
+"set_bike_variant":
+{ Args: { "p_bike_id": string,"p_request_id": string,"p_variant_id": string }; Returns: Json
+                           },
+"set_needed_by":
+{ Args: { "p_card_id": string,"p_date": string,"p_request_id": string }; Returns: Json
+                           },
+"start_repair":
+{ Args: { "p_bike_id": string,"p_request_id": string }; Returns: Json
+                           },
+"switch_line_part":
+{ Args: { "p_line_id": string,"p_part_id": string,"p_request_id": string }; Returns: Json
+                           },
+"update_draft_findings":
+{ Args: { "p_card_id": string,"p_findings": Json,"p_request_id": string }; Returns: Json
                            }
           }
           Enums: {

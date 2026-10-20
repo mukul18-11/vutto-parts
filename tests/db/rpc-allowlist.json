@@ -1,9 +1,21 @@
 [
   "adjust_stock",
+  "confirm_job_card",
+  "create_bike",
+  "finding_candidates",
   "health",
+  "line_candidates",
+  "mark_arrived",
   "move_stock",
+  "part_candidates",
   "putaway",
   "request_bin_count",
+  "resolve_finding",
   "return_to_supplier",
-  "search_parts"
+  "search_parts",
+  "set_bike_variant",
+  "set_needed_by",
+  "start_repair",
+  "switch_line_part",
+  "update_draft_findings"
 ]
