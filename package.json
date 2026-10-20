@@ -12,7 +12,7 @@
     "test:db": "vitest run --project db --passWithNoTests",
     "test:e2e": "playwright test --pass-with-no-tests",
     "seed:gen": "tsx scripts/seed/generate.ts",
-    "demo:users": "tsx scripts/create-demo-users.ts",
+    "demo:users": "tsx --env-file=.env scripts/create-demo-users.ts",
     "types": "supabase gen types typescript --local > src/lib/database.types.ts"
   },
   "dependencies": {

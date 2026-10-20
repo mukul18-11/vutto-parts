@@ -30,6 +30,8 @@
   "remove_draft_line",
   "reorder_suggestions",
   "request_bin_count",
+  "reseed_if_stale_service",
+  "reset_demo",
   "resolve_finding",
   "return_from_job_card",
   "return_to_supplier",

@@ -1406,6 +1406,12 @@ isOneToOne: false
 "request_bin_count":
 { Args: { "p_bin_id": string,"p_request_id": string }; Returns: Json
                            },
+"reseed_if_stale_service":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"reset_demo":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "resolve_finding":
 { Args: { "p_finding_id": string,"p_no_part_reason"?: string,"p_part_id"?: string,"p_request_id": string }; Returns: Json
                            },

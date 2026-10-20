@@ -1,0 +1,192 @@
+{
+  "template_anchor_date": "2026-04-05",
+  "NCR": {
+    "chains": [
+      {
+        "label": "A",
+        "card_code": "JC-NCR-002400",
+        "reg_no": "DL3SFA2424",
+        "po_code": "PO-NCR-000278",
+        "sku": "HLA-SPL-G2",
+        "expected_on": "2026-04-06"
+      },
+      {
+        "label": "B",
+        "card_code": "JC-NCR-002438",
+        "reg_no": "HR26ZU6698",
+        "po_code": "PO-NCR-000283",
+        "sku": "SPS-P150-G2",
+        "expected_on": "2026-04-07"
+      },
+      {
+        "label": "C",
+        "card_code": "JC-NCR-002368",
+        "reg_no": "HR26TS2826",
+        "po_code": "PO-NCR-000273",
+        "sku": "SPD-C350-G2",
+        "expected_on": "2026-04-07"
+      }
+    ],
+    "po_due_tomorrow": "PO-NCR-000278",
+    "po_overdue": "PO-NCR-000251",
+    "po_partially_received": "PO-NCR-000272",
+    "receiving": {
+      "sku": "TLA-SPL-G2",
+      "qty": 2,
+      "reserved_for": [
+        "JC-NCR-002331",
+        "JC-NCR-002366"
+      ]
+    },
+    "ready_to_issue": [
+      "JC-NCR-002436",
+      "JC-NCR-002437",
+      "JC-NCR-002473"
+    ],
+    "blocked": {
+      "in_transit": [
+        "JC-NCR-002368",
+        "JC-NCR-002400",
+        "JC-NCR-002438"
+      ],
+      "overdue_po": [
+        "JC-NCR-002203"
+      ],
+      "not_ordered": [
+        "JC-NCR-002367"
+      ],
+      "flagged_fitment": [
+        "JC-NCR-002435"
+      ]
+    },
+    "inbound_shortfall": [
+      "JC-NCR-002472"
+    ],
+    "low_stock_auto_skus": [
+      "CSK-GLM",
+      "DBT-ACT110",
+      "FT-9090-19-TT",
+      "RSH-SHN",
+      "RT-14060-17-TL",
+      "SP-HERO-100"
+    ],
+    "dead_stock_skus": [
+      "SPS-ACT-G1",
+      "FMG-ACT-G1",
+      "CRK-C350",
+      "HLA-FZS-G1",
+      "TLA-FZS-G1",
+      "SPS-P150-G1",
+      "HLA-GLM-G1",
+      "STC-PSN-G1",
+      "SPD-HFD-G1",
+      "CRK-APR"
+    ],
+    "emergency_buy_cards": [
+      "JC-NCR-002332"
+    ],
+    "unsourced": {
+      "sku": "SPD-ACT-G1",
+      "card_code": "JC-NCR-002367"
+    },
+    "unknown_variant": {
+      "card_code": "JC-NCR-002508",
+      "reg_no": "DL1SEE2651"
+    },
+    "flagged_fitment": {
+      "sku": "AF-JUP",
+      "variant": "JUP_BS6_DI",
+      "card_code": "JC-NCR-002435"
+    }
+  },
+  "JPR": {
+    "chains": [
+      {
+        "label": "A",
+        "card_code": "JC-JPR-000489",
+        "reg_no": "RJ45PV8583",
+        "po_code": "PO-JPR-000138",
+        "sku": "HLA-SPL-G2",
+        "expected_on": "2026-04-06"
+      },
+      {
+        "label": "B",
+        "card_code": "JC-JPR-000497",
+        "reg_no": "RJ45ZB1343",
+        "po_code": "PO-JPR-000141",
+        "sku": "SPS-ACT-G3",
+        "expected_on": "2026-04-07"
+      },
+      {
+        "label": "C",
+        "card_code": "JC-JPR-000498",
+        "reg_no": "RJ60ZW9262",
+        "po_code": "PO-JPR-000142",
+        "sku": "TLA-P150-G2",
+        "expected_on": "2026-04-07"
+      }
+    ],
+    "po_due_tomorrow": "PO-JPR-000138",
+    "po_overdue": "PO-JPR-000130",
+    "po_partially_received": "PO-JPR-000135",
+    "receiving": {
+      "sku": "TLA-SPL-G2",
+      "qty": 2,
+      "reserved_for": [
+        "JC-JPR-000478",
+        "JC-JPR-000487"
+      ]
+    },
+    "ready_to_issue": [
+      "JC-JPR-000505",
+      "JC-JPR-000506",
+      "JC-JPR-000515"
+    ],
+    "blocked": {
+      "in_transit": [
+        "JC-JPR-000489",
+        "JC-JPR-000497",
+        "JC-JPR-000498"
+      ],
+      "overdue_po": [
+        "JC-JPR-000471"
+      ],
+      "not_ordered": [
+        "JC-JPR-000488"
+      ],
+      "flagged_fitment": []
+    },
+    "inbound_shortfall": [
+      "JC-JPR-000514"
+    ],
+    "low_stock_auto_skus": [
+      "AF-ACC",
+      "AF-ACT-6G",
+      "AF-ACT-CARB",
+      "AF-HERO-BS6",
+      "MIR-TVS"
+    ],
+    "dead_stock_skus": [
+      "HLA-APR-G1",
+      "SPS-NTQ-G1",
+      "FMG-ACC-G1",
+      "STC-JUP-G2",
+      "CRK-NTQ",
+      "SPS-DIO-G1",
+      "TLA-PLT-G1",
+      "HLA-A125-G1"
+    ],
+    "emergency_buy_cards": [
+      "JC-JPR-000479"
+    ],
+    "unsourced": {
+      "sku": "SPD-ACT-G1",
+      "card_code": "JC-JPR-000488"
+    },
+    "unknown_variant": {
+      "card_code": "JC-JPR-000522",
+      "reg_no": "RJ60ZM1570"
+    },
+    "flagged_fitment": null
+  }
+}
