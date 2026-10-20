@@ -128,3 +128,24 @@
     @apply font-sans;
   }
 }
+/* Bin labels (/bins/labels): A4 sheet, 3 labels per row, a label never splits across pages. */
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+  .label-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6mm;
+  }
+  .label {
+    break-inside: avoid;
+    border: 0.3mm solid #000;
+    border-radius: 2mm;
+  }
+}

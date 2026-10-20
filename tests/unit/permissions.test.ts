@@ -30,6 +30,8 @@ const NOT_ACTIONS = new Set([
   "part_waits",
   "reorder_suggestions",
   "stock_ledger",
+  "blocked_board_kpis",
+  "job_card_history",
 ]);
 // ACTIONS keys that are a variant of an RPC rather than an RPC name.
 const DERIVED_ACTIONS = new Set(["move_out_of_quarantine"]);
@@ -56,8 +58,14 @@ describe("roles", () => {
 describe("routes", () => {
   const matrix: Record<RouteKey, Record<Role, boolean>> = {
     "/blocked": { store_keeper: false, manager: true, admin: true },
+    "/bikes": { store_keeper: false, manager: true, admin: true },
+    "/job-cards": { store_keeper: false, manager: true, admin: true },
     "/store": { store_keeper: true, manager: true, admin: true },
+    "/catalogue": { store_keeper: true, manager: true, admin: true },
+    "/bins/labels": { store_keeper: true, manager: true, admin: true },
   };
+  // Detail-only routes are reached by links and have no navigation entry.
+  const DETAIL_ONLY = new Set<RouteKey>(["/job-cards", "/bins/labels"]);
 
   it("match the expected matrix", () => {
     expect(Object.keys(ROUTES).sort()).toEqual(Object.keys(matrix).sort());
@@ -69,9 +77,12 @@ describe("routes", () => {
   it("navigation lists exactly the accessible routes", () => {
     for (const role of ROLES) {
       const hrefs = navFor(role).map((item) => item.href);
-      expect(hrefs).toEqual((Object.keys(ROUTES) as RouteKey[]).filter((r) => canAccess(role, r)));
+      expect(hrefs).toEqual(
+        (Object.keys(ROUTES) as RouteKey[]).filter((r) => canAccess(role, r) && !DETAIL_ONLY.has(r)),
+      );
     }
-    expect(navFor("store_keeper").map((i) => i.href)).toEqual(["/store"]);
+    expect(navFor("store_keeper").map((i) => i.href)).toEqual(["/store", "/catalogue"]);
+    expect(navFor("manager").map((i) => i.href)).toEqual(["/blocked", "/bikes", "/store", "/catalogue"]);
   });
 });
 

@@ -14,11 +14,16 @@ export function roleAtLeast(role: Role, min: Role): boolean {
   return ROLES.indexOf(role) >= ROLES.indexOf(min);
 }
 
-type RouteRule = { minRole: Role; nav: MessageKey };
+/** nav: the navigation label; detail-only routes (reached by links) have none. */
+type RouteRule = { minRole: Role; nav?: MessageKey };
 
 export const ROUTES = {
   "/blocked": { minRole: "manager", nav: "nav.blocked" },
+  "/bikes": { minRole: "manager", nav: "nav.bikes" },
+  "/job-cards": { minRole: "manager" },
   "/store": { minRole: "store_keeper", nav: "nav.store" },
+  "/catalogue": { minRole: "store_keeper", nav: "nav.catalogue" },
+  "/bins/labels": { minRole: "store_keeper" },
 } as const satisfies Record<string, RouteRule>;
 
 export type RouteKey = keyof typeof ROUTES;
@@ -84,9 +89,12 @@ export function can(role: Role, action: ActionKey): boolean {
 export type NavItem = { href: RouteKey; label: MessageKey };
 
 export function navFor(role: Role): NavItem[] {
-  return (Object.keys(ROUTES) as RouteKey[])
-    .filter((route) => canAccess(role, route))
-    .map((route) => ({ href: route, label: ROUTES[route].nav }));
+  const items: NavItem[] = [];
+  for (const route of Object.keys(ROUTES) as RouteKey[]) {
+    const rule: RouteRule = ROUTES[route];
+    if (rule.nav && canAccess(role, route)) items.push({ href: route, label: rule.nav });
+  }
+  return items;
 }
 
 /** Home screen per role: managers and admin start on the blocked board, store keepers in the store. */

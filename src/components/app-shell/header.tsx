@@ -15,7 +15,7 @@ export async function AppHeader({ profile, workshops }: { profile: Profile; work
   const items = navFor(profile.role);
 
   return (
-    <header className="border-b bg-background">
+    <header className="border-b bg-background print:hidden">
       <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-2">
         <div className="flex items-center justify-between gap-2">
           <span className="font-semibold">{t("common.appName")}</span>

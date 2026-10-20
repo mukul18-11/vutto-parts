@@ -49,6 +49,9 @@ export function useOnline(): boolean {
   );
 }
 
+/** A form's own values: the action input without the envelope the hook adds. */
+export type FormValues<P extends RpcEnvelope> = Omit<P, keyof RpcEnvelope>;
+
 type Options<T> = {
   /** The user id the page was rendered for (SESSION_CHANGED check on the server). */
   userId: string;
@@ -59,8 +62,8 @@ type Options<T> = {
  * Client side of the RPC pattern (SPEC §11.1, §14). The request_id is created once on mount,
  * reused for every retry and double tap, and replaced only after a confirmed outcome.
  */
-export function useRpcForm<I extends object, T>(
-  action: (input: I & RpcEnvelope) => Promise<RpcResult<T>>,
+export function useRpcForm<P extends RpcEnvelope, T>(
+  action: (input: P) => Promise<RpcResult<T>>,
   { userId, onSuccess }: Options<T>,
 ) {
   const router = useRouter();
@@ -76,12 +79,12 @@ export function useRpcForm<I extends object, T>(
   }, []);
 
   const submit = useCallback(
-    (values: I) => {
+    (values: FormValues<P>) => {
       // Synchronous guard: a second tap before React re-renders does nothing.
       if (submittingRef.current || !navigator.onLine) return;
       submittingRef.current = true;
       requestIdRef.current ??= uuidv4();
-      const input = { ...values, request_id: requestIdRef.current, rendered_user_id: userId };
+      const input = { ...values, request_id: requestIdRef.current, rendered_user_id: userId } as P;
 
       startTransition(async () => {
         try {

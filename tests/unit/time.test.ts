@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { formatDateOnly, formatIST, formatISTTime, istToday } from "@/lib/time";
+import { makeT } from "@/lib/i18n";
+import { formatDateOnly, formatDuration, formatHours, formatIST, formatISTTime, istToday } from "@/lib/time";
 
 afterEach(() => {
   vi.useRealTimers();
@@ -49,5 +50,22 @@ describe("formatDateOnly", () => {
   it("rejects anything that is not YYYY-MM-DD", () => {
     expect(() => formatDateOnly("2026-13-01")).toThrow(RangeError);
     expect(() => formatDateOnly("20 Oct")).toThrow(RangeError);
+  });
+});
+
+describe("formatDuration", () => {
+  const now = Date.parse("2026-10-20T12:00:00Z");
+  const t = makeT("en");
+  it("shows days and hours, hours and minutes, or minutes", () => {
+    expect(formatDuration("2026-10-17T08:00:00Z", now, t)).toBe("3d 4h");
+    expect(formatDuration("2026-10-20T06:48:00Z", now, t)).toBe("5h 12m");
+    expect(formatDuration("2026-10-20T11:52:30Z", now, t)).toBe("7m");
+  });
+  it("never goes negative", () => {
+    expect(formatDuration("2026-10-21T00:00:00Z", now, t)).toBe("0m");
+  });
+  it("formats SQL hours", () => {
+    expect(formatHours("50.5", t)).toBe("2d 2h");
+    expect(formatHours(1.25, t)).toBe("1h 15m");
   });
 });

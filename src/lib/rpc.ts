@@ -19,7 +19,7 @@ export type MutatingRpc = {
 type Client = Awaited<ReturnType<typeof createClient>>;
 
 /** Every form schema extends this: the request_id and the user id the page was rendered for. */
-export const rpcBase = z.object({ request_id: z.uuid(), rendered_user_id: z.uuid() });
+export const rpcBase = z.object({ request_id: z.guid(), rendered_user_id: z.guid() });
 export function rpcInput<S extends z.ZodRawShape>(shape: S) {
   return rpcBase.extend(shape);
 }

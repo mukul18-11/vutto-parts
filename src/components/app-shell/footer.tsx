@@ -8,7 +8,7 @@ type Props = { anchorDate: string | null; admin?: { schemaVersion: string | null
 export async function AppFooter({ anchorDate, admin }: Props) {
   const t = await getT();
   return (
-    <footer className="border-t px-4 py-3 text-center text-xs text-muted-foreground">
+    <footer className="border-t px-4 py-3 text-center text-xs text-muted-foreground print:hidden">
       <p>{anchorDate ? t("footer.simulated", { date: formatDateOnly(anchorDate) }) : t("footer.notSeeded")}</p>
       {admin && (
         <p data-testid="footer-version" className="mt-1 font-mono">
