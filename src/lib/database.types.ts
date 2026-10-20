@@ -893,8 +893,28 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "health":
+            "adjust_stock":
+{ Args: { "p_bin_id": string,"p_counted_qty": number,"p_expected_on_hand": number,"p_part_id": string,"p_reason": string,"p_request_id": string }; Returns: Json
+                           },
+"health":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"move_stock":
+{ Args: { "p_from_bin_id": string,"p_part_id": string,"p_qty": number,"p_reason": string,"p_request_id": string,"p_to_bin_id": string }; Returns: Json
+                           },
+"putaway":
+{ Args: { "p_from_bin_id": string,"p_part_id": string,"p_qty": number,"p_request_id": string,"p_to_bin_id": string }; Returns: Json
+                           },
+"request_bin_count":
+{ Args: { "p_bin_id": string,"p_request_id": string }; Returns: Json
+                           },
+"return_to_supplier":
+{ Args: { "p_bin_id": string,"p_part_id": string,"p_qty": number,"p_reason": string,"p_request_id": string }; Returns: Json
+                           },
+"search_parts":
+{ Args: { "p_part_type"?: string,"p_q": string,"p_variant_id"?: string,"p_workshop_id": string }; Returns: {
+              "available": number,"category": Database["public"]['Enums']["part_category"],"fits": boolean,"is_universal": boolean,"name": string,"name_hi": string,"oem_part_no": string,"part_id": string,"part_type": string,"sku": string,"uom": Database["public"]['Enums']["uom"],"usable_on_hand": number
+            }[]
                            }
           }
           Enums: {

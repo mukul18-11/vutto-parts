@@ -1,1 +1,9 @@
-["health"]
+[
+  "adjust_stock",
+  "health",
+  "move_stock",
+  "putaway",
+  "request_bin_count",
+  "return_to_supplier",
+  "search_parts"
+]
