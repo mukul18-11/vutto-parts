@@ -8,6 +8,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { clientAs, pgClient, type Client } from "./clients";
 import { insertBins, testClear } from "./fixtures";
 import { expectInvariantsHold } from "./invariants";
+import { insertPurchasingCatalog, insertReorder, poLines as poLinesOf, SUP, type Po, type PoLine } from "./purchasing-fixtures";
 import {
   confirmAs,
   createBikeAs,
@@ -36,9 +37,6 @@ let ncrStore: Client;
 let jprManager: Client;
 let admin: Client;
 
-/** NCR default supplier (lead 3) and a Jaipur supplier (lead 1). */
-const SUP = { ncr: id(51), jpr: id(52) };
-
 type Req = {
   part_id: string;
   usable_on_hand: number;
@@ -60,8 +58,6 @@ type GenResult = {
   unsourced: { part_id: string; sku: string; qty: number }[];
   drafts: { po_id: string; code: string; supplier_id: string; lines: PoLine[] }[];
 };
-type PoLine = { line_id: string; part_id: string; sku: string; qty_ordered: number; unit_price_paise: number | null; source: string };
-type Po = { po_id: string; code: string; status: string; expected_on: string | null; lines: PoLine[] };
 
 const one = <T = Record<string, unknown>>(sql: string, params: unknown[] = []) => queryOne<T>(db, sql, params);
 const stockIn = (qty: number, part: string = P.oil) => stockInAs(db, qty, part, ncr.normal);
@@ -71,13 +67,8 @@ async function oilCard(reg: string, qty: number, model = M.splendor, variant = V
   return confirmAs(ncrManager, card.card_id);
 }
 
-async function reorder(part: string, ws: string, auto: boolean, safety: number, max: number, supplier: string | null = null) {
-  await db.query(
-    `insert into public.reorder_settings (workshop_id, part_id, auto, safety_stock, max_qty, preferred_supplier_id)
-     values ($1, $2, $3, $4, $5, $6)`,
-    [ws, part, auto, safety, max, supplier],
-  );
-}
+const reorder = (part: string, ws: string, auto: boolean, safety: number, max: number, supplier: string | null = null) =>
+  insertReorder(db, part, ws, auto, safety, max, supplier);
 
 async function requirement(part: string, ws: string = NCR, asOf: string | null = null): Promise<Req | undefined> {
   return (
@@ -91,21 +82,7 @@ async function requirement(part: string, ws: string = NCR, asOf: string | null =
 const generate = async (c: Client = ncrManager) =>
   expectOk<GenResult>(await rpc(c, "generate_draft_pos", { p_workshop_id: null }));
 
-/** Every PO line of the workshop's POs, in a stable order. */
-async function poLines(ws: string = NCR) {
-  return (
-    await db.query(
-      `select po.id as po_id, po.code, po.status, po.supplier_id, pl.id as line_id, p.sku, pl.qty_ordered,
-              pl.unit_price_paise::int as unit_price_paise, pl.source
-       from public.purchase_orders po
-       left join public.po_lines pl on pl.po_id = po.id
-       left join public.parts p on p.id = pl.part_id
-       where po.workshop_id = $1
-       order by po.code, p.sku`,
-      [ws],
-    )
-  ).rows;
-}
+const poLines = (ws: string = NCR) => poLinesOf(db, ws);
 
 const lineFor = async (sku: string, ws: string = NCR) => (await poLines(ws)).find((l) => l.sku === sku);
 
@@ -133,21 +110,7 @@ beforeEach(async () => {
   await insertBins(db, "NCR");
   await insertBins(db, "JPR");
   await insertJobCardCatalog(db);
-  await db.query(
-    `insert into public.suppliers (id, name, city, phone, kind, lead_time_days) values
-       ($1, 'Delhi Parts Co', 'Delhi', '9811111111', 'wholesaler', 3),
-       ($2, 'Jaipur Auto Spares', 'Jaipur', '9822222222', 'local_market', 1)`,
-    [SUP.ncr, SUP.jpr],
-  );
-  await db.query(`update public.parts set preferred_supplier_id = $1 where id = any($2)`, [
-    SUP.ncr,
-    [P.oil, P.reOil, P.shoe, P.air],
-  ]);
-  await db.query(
-    `insert into public.supplier_parts (supplier_id, part_id, supplier_code, price_paise) values
-       ($1, $2, 'DP-OIL', 32000), ($1, $3, null, 50000)`,
-    [SUP.ncr, P.oil, P.reOil],
-  );
+  await insertPurchasingCatalog(db);
 });
 
 afterEach(async () => {
