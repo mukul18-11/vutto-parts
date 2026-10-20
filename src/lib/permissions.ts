@@ -24,6 +24,10 @@ export const ROUTES = {
   "/purchasing": { minRole: "manager", nav: "nav.purchasing" },
   "/reorder": { minRole: "manager", nav: "nav.reorder" },
   "/emergency": { minRole: "manager", nav: "nav.emergency" },
+  "/metrics": { minRole: "manager", nav: "nav.metrics" },
+  "/metrics/part-wait": { minRole: "manager" },
+  "/metrics/wrong-fit": { minRole: "manager" },
+  "/dead-stock": { minRole: "manager", nav: "nav.deadStock" },
   "/store": { minRole: "store_keeper", nav: "nav.store" },
   "/store/receive": { minRole: "store_keeper" },
   "/store/putaway": { minRole: "store_keeper" },
@@ -35,6 +39,8 @@ export const ROUTES = {
   "/stock/quarantine": { minRole: "manager" },
   "/catalogue": { minRole: "store_keeper", nav: "nav.catalogue" },
   "/bins/labels": { minRole: "store_keeper" },
+  "/admin": { minRole: "admin", nav: "nav.admin" },
+  "/admin/planted": { minRole: "admin" },
 } as const satisfies Record<string, RouteRule>;
 
 export type RouteKey = keyof typeof ROUTES;

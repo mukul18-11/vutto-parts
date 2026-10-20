@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import { z } from "zod";
 import type { Database } from "@/lib/database.types";
-import { errorMessage, parseRpcError, type ErrorCode, type ParsedRpcError } from "@/lib/errors";
+import { errorMessage, parseRpcError, type ErrorCode, type ParsedRpcError, type RpcErrorLike } from "@/lib/errors";
 import { isMessageKey, type Lang, type MessageKey } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/server";
 import type { RpcFail, RpcResult } from "@/lib/rpc-form-logic";
@@ -45,6 +45,36 @@ type RunRpcOptions<S extends z.ZodType<z.infer<typeof rpcBase>>, F extends Mutat
 export async function runRpc<S extends z.ZodType<z.infer<typeof rpcBase>>, F extends MutatingRpc>(
   opts: RunRpcOptions<S, F>,
 ): Promise<RpcResult<Functions[F]["Returns"]>> {
+  return execute(opts.route, opts.schema, opts.input, true, (supabase, data) => {
+    const args = { ...opts.toArgs(data), p_request_id: data.request_id } as Functions[F]["Args"];
+    return callOnce(supabase, opts.fn, args);
+  });
+}
+
+/** RPCs exempt from SPEC §11.1 steps 1–7 that a form calls (no p_request_id, no idempotency row). */
+export type ExemptRpc = "reset_demo";
+
+/**
+ * The same pattern for an exempt RPC without arguments (public.reset_demo). The form's request_id
+ * is used only as the error ref; the RPC's own try-lock and cooldown stop double submits, so a
+ * lock timeout is not retried.
+ */
+export async function runExemptRpc<S extends z.ZodType<z.infer<typeof rpcBase>>, F extends ExemptRpc>(opts: {
+  route: string;
+  schema: S;
+  input: unknown;
+  fn: F;
+}): Promise<RpcResult<Functions[F]["Returns"]>> {
+  return execute(opts.route, opts.schema, opts.input, false, (supabase) => supabase.rpc(opts.fn));
+}
+
+async function execute<S extends z.ZodType<z.infer<typeof rpcBase>>, R>(
+  route: string,
+  schema: S,
+  input: unknown,
+  retryOnce: boolean,
+  call: (supabase: Client, data: z.output<S>) => PromiseLike<{ data: unknown; error: unknown }>,
+): Promise<RpcResult<R>> {
   const lang = await getLang();
   const fail = (code: ErrorCode, extra?: Partial<RpcFail>): RpcFail => ({
     ok: false,
@@ -53,7 +83,7 @@ export async function runRpc<S extends z.ZodType<z.infer<typeof rpcBase>>, F ext
     ...extra,
   });
 
-  const parsed = opts.schema.safeParse(opts.input);
+  const parsed = schema.safeParse(input);
   if (!parsed.success) return fail("VALIDATION", { fieldErrors: fieldErrorsFrom(parsed.error) });
   const data = parsed.data;
 
@@ -64,25 +94,25 @@ export async function runRpc<S extends z.ZodType<z.infer<typeof rpcBase>>, F ext
     if (!auth.user) return fail("SESSION_EXPIRED");
     if (auth.user.id !== data.rendered_user_id) return fail("SESSION_CHANGED");
 
-    const args = { ...opts.toArgs(data), p_request_id: data.request_id } as Functions[F]["Args"];
-    let res = await callOnce(supabase, opts.fn, args);
-    let err = res.error ? parseRpcError(res.error) : null;
-    if (err?.retryable) {
+    const client = supabase;
+    let res = await call(client, data);
+    let err = res.error ? parseRpcError(res.error as RpcErrorLike) : null;
+    if (retryOnce && err?.retryable) {
       await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
-      res = await callOnce(supabase, opts.fn, args);
-      err = res.error ? parseRpcError(res.error) : null;
+      res = await call(client, data);
+      err = res.error ? parseRpcError(res.error as RpcErrorLike) : null;
     }
 
     if (!err) {
       revalidatePath("/", "layout");
-      return { ok: true, data: res.data as Functions[F]["Returns"] };
+      return { ok: true, data: res.data as R };
     }
     if (err.code !== "UNKNOWN") return fail(err.code, { detail: err.detail });
-    return await unknownFailure(supabase, lang, opts.route, data.request_id, err);
+    return await unknownFailure(supabase, lang, route, data.request_id, err);
   } catch (e) {
     unstable_rethrow(e);
     const message = e instanceof Error ? e.message : String(e);
-    return await unknownFailure(supabase, lang, opts.route, data.request_id, {
+    return await unknownFailure(supabase, lang, route, data.request_id, {
       rawCode: "THROWN",
       rawMessage: message,
     });

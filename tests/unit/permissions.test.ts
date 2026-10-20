@@ -34,6 +34,8 @@ const NOT_ACTIONS = new Set([
   "stock_ledger",
   "blocked_board_kpis",
   "job_card_history",
+  "dead_stock_list",
+  "wrong_fit_returns",
 ]);
 // ACTIONS keys that are a variant of an RPC rather than an RPC name.
 const DERIVED_ACTIONS = new Set(["move_out_of_quarantine"]);
@@ -65,6 +67,10 @@ describe("routes", () => {
     "/purchasing": { store_keeper: false, manager: true, admin: true },
     "/reorder": { store_keeper: false, manager: true, admin: true },
     "/emergency": { store_keeper: false, manager: true, admin: true },
+    "/metrics": { store_keeper: false, manager: true, admin: true },
+    "/metrics/part-wait": { store_keeper: false, manager: true, admin: true },
+    "/metrics/wrong-fit": { store_keeper: false, manager: true, admin: true },
+    "/dead-stock": { store_keeper: false, manager: true, admin: true },
     "/store": { store_keeper: true, manager: true, admin: true },
     "/store/receive": { store_keeper: true, manager: true, admin: true },
     "/store/putaway": { store_keeper: true, manager: true, admin: true },
@@ -76,6 +82,8 @@ describe("routes", () => {
     "/stock/quarantine": { store_keeper: false, manager: true, admin: true },
     "/catalogue": { store_keeper: true, manager: true, admin: true },
     "/bins/labels": { store_keeper: true, manager: true, admin: true },
+    "/admin": { store_keeper: false, manager: false, admin: true },
+    "/admin/planted": { store_keeper: false, manager: false, admin: true },
   };
   // Detail-only routes are reached by links and have no navigation entry.
   const DETAIL_ONLY = new Set<RouteKey>([
@@ -88,6 +96,9 @@ describe("routes", () => {
     "/store/emergency",
     "/stock/count",
     "/stock/quarantine",
+    "/metrics/part-wait",
+    "/metrics/wrong-fit",
+    "/admin/planted",
   ]);
 
   it("match the expected matrix", () => {
@@ -111,9 +122,24 @@ describe("routes", () => {
       "/purchasing",
       "/reorder",
       "/emergency",
+      "/metrics",
+      "/dead-stock",
       "/store",
       "/stock",
       "/catalogue",
+    ]);
+    expect(navFor("admin").map((i) => i.href)).toEqual([
+      "/blocked",
+      "/bikes",
+      "/purchasing",
+      "/reorder",
+      "/emergency",
+      "/metrics",
+      "/dead-stock",
+      "/store",
+      "/stock",
+      "/catalogue",
+      "/admin",
     ]);
   });
 });

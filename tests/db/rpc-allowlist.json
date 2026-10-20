@@ -12,6 +12,7 @@
   "create_bike",
   "create_job_card",
   "dead_stock",
+  "dead_stock_list",
   "emergency_context",
   "finding_candidates",
   "fit_badge",
@@ -50,5 +51,6 @@
   "store_home_counts",
   "switch_line_part",
   "update_draft_findings",
-  "update_draft_line"
+  "update_draft_line",
+  "wrong_fit_returns"
 ]

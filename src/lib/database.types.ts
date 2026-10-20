@@ -1754,6 +1754,11 @@ isOneToOne: false
               "available": number,"dead_qty": number,"last_activity_at": string,"name": string,"part_id": string,"price_source": string,"sku": string,"unit_price_paise": number,"uom": Database["public"]['Enums']["uom"],"value_paise": number,"workshop_id": string
             }[]
                            },
+"dead_stock_list":
+{ Args: { "p_as_of"?: string,"p_days"?: number,"p_workshop_id": string }; Returns: {
+              "age_days": number,"available": number,"dead_qty": number,"last_activity_at": string,"last_move_at": string,"last_move_type": Database["public"]['Enums']["move_type"],"name": string,"part_id": string,"price_source": string,"sku": string,"unit_price_paise": number,"uom": Database["public"]['Enums']["uom"],"value_paise": number,"workshop_id": string
+            }[]
+                           },
 "emergency_context":
 { Args: { "p_line_id": string }; Returns: {
               "available": number,"held_by": Json,"line_id": string,"part_id": string,"qty_reserved": number,"reference_price_paise": number,"remaining_need": number,"reserved_bins": Json,"workshop_id": string
@@ -1894,6 +1899,11 @@ isOneToOne: false
                            },
 "update_draft_line":
 { Args: { "p_line_id": string,"p_qty": number,"p_request_id": string,"p_unit_price_paise": number }; Returns: Json
+                           },
+"wrong_fit_returns":
+{ Args: { "p_from": string,"p_to": string,"p_workshop_id": string }; Returns: {
+              "card_code": string,"created_at": string,"job_card_id": string,"move_id": number,"note": string,"part_id": string,"part_name": string,"qty": number,"reg_no": string,"sku": string,"uom": Database["public"]['Enums']["uom"],"user_name": string,"workshop_id": string
+            }[]
                            }
           }
           Enums: {
