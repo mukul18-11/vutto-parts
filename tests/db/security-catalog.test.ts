@@ -2,9 +2,10 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type pg from "pg";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import allowlist from "./rpc-allowlist.json";
 import { pgClient } from "./clients";
+import { expectInvariantsHold } from "./invariants";
 
 const MIGRATIONS_DIR = path.resolve("supabase/migrations");
 
@@ -23,6 +24,10 @@ let db: pg.Client;
 
 beforeAll(async () => {
   db = await pgClient();
+});
+
+afterEach(async () => {
+  await expectInvariantsHold(db);
 });
 
 afterAll(async () => {

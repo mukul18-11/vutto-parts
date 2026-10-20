@@ -2,10 +2,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type pg from "pg";
 import { v4 as uuidv4 } from "uuid";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { anonClient, clientAs, pgClient, type Client } from "./clients";
 import { DEMO_USERS, WORKSHOP_IDS, type DemoUserKey } from "./demo-users";
 import { CAT, insertCatalog, insertGlobalRows, insertWorkshopChain, testClear, wsIds } from "./fixtures";
+import { expectInvariantsHold } from "./invariants";
 import { NO_PROFILE_USER, type SessionKey } from "./sessions";
 
 // Tables with a workshop_id and the workshop-scoped SELECT policy. profiles and doc_counters
@@ -70,6 +71,10 @@ beforeAll(async () => {
     select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
     where n.nspname = 'public' and c.relkind in ('r', 'p') order by 1`);
   allTables = rows.map((r) => r.relname);
+});
+
+afterEach(async () => {
+  await expectInvariantsHold(db);
 });
 
 afterAll(async () => {
@@ -283,5 +288,24 @@ describe("master data writes", () => {
       { workshop_id: WORKSHOP_IDS.NCR, safety_stock: 3 },
       { workshop_id: WORKSHOP_IDS.JPR, safety_stock: 2 },
     ]);
+  });
+});
+
+describe("v_stock_position", () => {
+  it("gives a Jaipur user Jaipur rows only", async () => {
+    const rows = await visibleRows(clients.jpr_store, "v_stock_position");
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.filter((r) => r.workshop_id === WORKSHOP_IDS.NCR)).toEqual([]);
+  });
+
+  it("gives admin both workshops and a user without a profile nothing", async () => {
+    const ws = new Set((await visibleRows(clients.admin, "v_stock_position")).map((r) => r.workshop_id));
+    expect(ws).toEqual(new Set([WORKSHOP_IDS.NCR, WORKSHOP_IDS.JPR]));
+    expect(await visibleRows(clients.no_profile, "v_stock_position")).toEqual([]);
+  });
+
+  it("is not readable by anon", async () => {
+    const { error } = await loose(anonClient()).from("v_stock_position").select("*");
+    expect(error?.code).toBe("42501");
   });
 });

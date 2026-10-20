@@ -39,6 +39,12 @@ export type Database = {
       foreignKeyName: "activity_log_workshop_id_fkey"
       columns: ["workshop_id"]
 isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "activity_log_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
       referencedRelation: "workshops"
       referencedColumns: ["id"]
     }
@@ -85,6 +91,12 @@ isOneToOne: false
       foreignKeyName: "bikes_workshop_id_fkey"
       columns: ["workshop_id"]
 isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "bikes_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
       referencedRelation: "workshops"
       referencedColumns: ["id"]
     }
@@ -102,6 +114,12 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
+      foreignKeyName: "bins_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
       foreignKeyName: "bins_workshop_id_fkey"
       columns: ["workshop_id"]
 isOneToOne: false
@@ -139,6 +157,12 @@ isOneToOne: false
       foreignKeyName: "doc_counters_workshop_id_fkey"
       columns: ["workshop_id"]
 isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "doc_counters_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
       referencedRelation: "workshops"
       referencedColumns: ["id"]
     }
@@ -161,6 +185,18 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "parts"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "emergency_buys_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["part_id"]
+    },{
+      foreignKeyName: "emergency_buys_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
     },{
       foreignKeyName: "emergency_buys_workshop_id_fkey"
       columns: ["workshop_id"]
@@ -228,6 +264,18 @@ isOneToOne: false
       referencedRelation: "parts"
       referencedColumns: ["id"]
     },{
+      foreignKeyName: "grn_lines_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["part_id"]
+    },{
+      foreignKeyName: "grn_lines_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
       foreignKeyName: "grn_lines_workshop_id_fkey"
       columns: ["workshop_id"]
 isOneToOne: false
@@ -265,6 +313,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "suppliers"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "grns_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
     },{
       foreignKeyName: "grns_workshop_id_fkey"
       columns: ["workshop_id"]
@@ -321,6 +375,12 @@ isOneToOne: false
       foreignKeyName: "inspection_findings_workshop_id_fkey"
       columns: ["workshop_id"]
 isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "inspection_findings_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
       referencedRelation: "workshops"
       referencedColumns: ["id"]
     },{
@@ -349,6 +409,18 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "parts"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_card_lines_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["part_id"]
+    },{
+      foreignKeyName: "job_card_lines_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
     },{
       foreignKeyName: "job_card_lines_workshop_id_fkey"
       columns: ["workshop_id"]
@@ -381,6 +453,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "bikes"
       referencedColumns: ["workshop_id","id"]
+    },{
+      foreignKeyName: "job_cards_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
     },{
       foreignKeyName: "job_cards_workshop_id_fkey"
       columns: ["workshop_id"]
@@ -428,6 +506,12 @@ isOneToOne: false
       referencedRelation: "parts"
       referencedColumns: ["id"]
     },{
+      foreignKeyName: "part_fitments_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["part_id"]
+    },{
       foreignKeyName: "part_fitments_variant_id_fkey"
       columns: ["variant_id"]
 isOneToOne: false
@@ -474,6 +558,18 @@ isOneToOne: false
       referencedRelation: "parts"
       referencedColumns: ["id"]
     },{
+      foreignKeyName: "po_lines_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["part_id"]
+    },{
+      foreignKeyName: "po_lines_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
       foreignKeyName: "po_lines_workshop_id_fkey"
       columns: ["workshop_id"]
 isOneToOne: false
@@ -503,6 +599,12 @@ isOneToOne: false
       foreignKeyName: "profiles_workshop_id_fkey"
       columns: ["workshop_id"]
 isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "profiles_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
       referencedRelation: "workshops"
       referencedColumns: ["id"]
     }
@@ -525,6 +627,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "suppliers"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "purchase_orders_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
     },{
       foreignKeyName: "purchase_orders_workshop_id_fkey"
       columns: ["workshop_id"]
@@ -552,11 +660,23 @@ isOneToOne: false
       referencedRelation: "parts"
       referencedColumns: ["id"]
     },{
+      foreignKeyName: "reorder_settings_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["part_id"]
+    },{
       foreignKeyName: "reorder_settings_preferred_supplier_id_fkey"
       columns: ["preferred_supplier_id"]
 isOneToOne: false
       referencedRelation: "suppliers"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reorder_settings_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
     },{
       foreignKeyName: "reorder_settings_workshop_id_fkey"
       columns: ["workshop_id"]
@@ -584,6 +704,12 @@ isOneToOne: false
       referencedRelation: "parts"
       referencedColumns: ["id"]
     },{
+      foreignKeyName: "stock_balances_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["part_id"]
+    },{
       foreignKeyName: "stock_balances_workshop_id_bin_id_fkey"
       columns: ["workshop_id","bin_id"]
 isOneToOne: false
@@ -610,11 +736,23 @@ isOneToOne: false
       referencedRelation: "parts"
       referencedColumns: ["id"]
     },{
+      foreignKeyName: "stock_moves_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["part_id"]
+    },{
       foreignKeyName: "stock_moves_workshop_id_emergency_buy_id_fkey"
       columns: ["workshop_id","emergency_buy_id"]
 isOneToOne: false
       referencedRelation: "emergency_buys"
       referencedColumns: ["workshop_id","id"]
+    },{
+      foreignKeyName: "stock_moves_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
     },{
       foreignKeyName: "stock_moves_workshop_id_fkey"
       columns: ["workshop_id"]
@@ -665,6 +803,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "parts"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "supplier_parts_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["part_id"]
     },{
       foreignKeyName: "supplier_parts_supplier_id_fkey"
       columns: ["supplier_id"]
@@ -718,7 +862,35 @@ isOneToOne: false
                 }
           }
           Views: {
-            [_ in never]: never
+            "v_part_last_price": {
+                  Row: {
+                    "grn_id": string | null,"part_id": string | null,"received_at": string | null,"unit_price_paise": number | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "grn_lines_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "parts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "grn_lines_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["part_id"]
+    }
+                  ]
+                },"v_stock_position": {
+                  Row: {
+                    "available": number | null,"on_order": number | null,"outstanding_demand": number | null,"part_id": string | null,"quarantine_on_hand": number | null,"reserved": number | null,"shortfall": number | null,"usable_on_hand": number | null,"workshop_id": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
+                }
           }
           Functions: {
             "health":

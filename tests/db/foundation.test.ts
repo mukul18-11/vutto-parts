@@ -1,9 +1,10 @@
 // Foundation helpers: errors, health, IST dates, idempotency, authorize and the role helpers.
 import { readdirSync } from "node:fs";
 import type pg from "pg";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { v4 as uuidv4 } from "uuid";
 import { anonClient, pgClient } from "./clients";
+import { expectInvariantsHold } from "./invariants";
 import { DEMO_USERS, WORKSHOP_IDS } from "./demo-users";
 import { NO_PROFILE_USER } from "./sessions";
 
@@ -13,6 +14,10 @@ let db: pg.Client;
 
 beforeAll(async () => {
   db = await pgClient();
+});
+
+afterEach(async () => {
+  await expectInvariantsHold(db);
 });
 
 afterAll(async () => {
