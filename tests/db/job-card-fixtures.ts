@@ -187,3 +187,35 @@ export async function insertJobCardCatalog(db: pg.Client): Promise<void> {
     NCR,
   ]);
 }
+
+/** purchased -> at_workshop (store keeper). */
+export async function arriveAs(store: Client, card: Card): Promise<void> {
+  expectOk(await rpc(store, "mark_arrived", { p_bike_id: card.bike_id }));
+}
+
+/** purchased -> at_workshop -> in_repair. */
+export async function toRepairAs(store: Client, manager: Client, card: Card): Promise<void> {
+  await arriveAs(store, card);
+  expectOk(await rpc(manager, "start_repair", { p_bike_id: card.bike_id }));
+}
+
+export type IssueLine = {
+  line_id: string;
+  card_code: string;
+  sku: string;
+  qty_required: number;
+  qty_reserved: number;
+  qty_issued: number;
+  qty_returned: number;
+  net_issued: number;
+  status: string;
+  cancelled_at: string | null;
+};
+
+export const issueAs = (c: Client, line: string, bin: string, qty: number, requestId?: string) =>
+  rpc(c, "issue_to_job_card", {
+    p_line_id: line,
+    p_bin_id: bin,
+    p_qty: qty,
+    ...(requestId ? { p_request_id: requestId } : {}),
+  });
