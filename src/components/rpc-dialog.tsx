@@ -29,6 +29,8 @@ type Props<P extends RpcEnvelope, T> = {
   effects?: React.ReactNode[];
   reason?: "required" | "optional" | "none";
   reasonLabel?: string;
+  /** Text the reason starts with (editable), e.g. "re-inspected". */
+  defaultReason?: string;
   destructive?: boolean;
   disabled?: boolean;
   /** Extra fields (controlled by the caller). */
@@ -44,12 +46,12 @@ const REASON_MAX = 200;
 export function RpcDialog<P extends RpcEnvelope, T>(props: Props<P, T>) {
   const t = useT();
   const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState("");
+  const [reason, setReason] = useState(props.defaultReason ?? "");
   const { submit, pending, disabled, state, reset } = useRpcForm(props.action, {
     userId: props.userId,
     onSuccess: (data) => {
       setOpen(false);
-      setReason("");
+      setReason(props.defaultReason ?? "");
       props.onSuccess?.(data);
     },
   });

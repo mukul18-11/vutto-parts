@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { makeT } from "@/lib/i18n";
-import { formatDateOnly, formatDuration, formatHours, formatIST, formatISTTime, istToday } from "@/lib/time";
+import { addDaysIST, formatDateOnly, formatDuration, formatHours, formatIST, formatISTTime, istToday } from "@/lib/time";
 
 afterEach(() => {
   vi.useRealTimers();
@@ -67,5 +67,23 @@ describe("formatDuration", () => {
   it("formats SQL hours", () => {
     expect(formatHours("50.5", t)).toBe("2d 2h");
     expect(formatHours(1.25, t)).toBe("1h 15m");
+  });
+});
+
+describe("addDaysIST", () => {
+  it.each([
+    ["2026-10-20", 3, "2026-10-23"],
+    ["2026-10-30", 3, "2026-11-02"],
+    ["2026-12-31", 1, "2027-01-01"],
+    ["2028-02-28", 1, "2028-02-29"],
+    ["2027-02-28", 1, "2027-03-01"],
+    ["2026-10-01", -1, "2026-09-30"],
+    ["2026-10-20", 0, "2026-10-20"],
+  ])("%s + %i = %s", (date, days, expected) => {
+    expect(addDaysIST(date, days)).toBe(expected);
+  });
+
+  it("refuses anything but YYYY-MM-DD", () => {
+    expect(() => addDaysIST("20/10/2026", 1)).toThrow(RangeError);
   });
 });

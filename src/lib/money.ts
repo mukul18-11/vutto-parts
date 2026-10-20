@@ -28,3 +28,11 @@ export function formatINR(paise: number): string {
   const decimal = `${paise < 0 ? "-" : ""}${rupees}.${fraction}` as `${number}`;
   return inr.format(decimal);
 }
+
+/** Integer paise as the text a MoneyInput starts with: 42000 → '420', 19550 → '195.50'. */
+export function paiseToInput(paise: number | null): string {
+  if (paise === null || !Number.isSafeInteger(paise) || paise <= 0) return "";
+  const rupees = (paise - (paise % 100)) / 100;
+  const fraction = paise % 100;
+  return fraction === 0 ? String(rupees) : `${rupees}.${String(fraction).padStart(2, "0")}`;
+}

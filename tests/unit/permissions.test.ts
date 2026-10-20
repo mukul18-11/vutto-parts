@@ -60,12 +60,28 @@ describe("routes", () => {
     "/blocked": { store_keeper: false, manager: true, admin: true },
     "/bikes": { store_keeper: false, manager: true, admin: true },
     "/job-cards": { store_keeper: false, manager: true, admin: true },
+    "/purchasing": { store_keeper: false, manager: true, admin: true },
+    "/reorder": { store_keeper: false, manager: true, admin: true },
     "/store": { store_keeper: true, manager: true, admin: true },
+    "/store/receive": { store_keeper: true, manager: true, admin: true },
+    "/store/putaway": { store_keeper: true, manager: true, admin: true },
+    "/store/issue": { store_keeper: true, manager: true, admin: true },
+    "/stock": { store_keeper: true, manager: true, admin: true },
+    "/stock/count": { store_keeper: false, manager: true, admin: true },
+    "/stock/quarantine": { store_keeper: false, manager: true, admin: true },
     "/catalogue": { store_keeper: true, manager: true, admin: true },
     "/bins/labels": { store_keeper: true, manager: true, admin: true },
   };
   // Detail-only routes are reached by links and have no navigation entry.
-  const DETAIL_ONLY = new Set<RouteKey>(["/job-cards", "/bins/labels"]);
+  const DETAIL_ONLY = new Set<RouteKey>([
+    "/job-cards",
+    "/bins/labels",
+    "/store/receive",
+    "/store/putaway",
+    "/store/issue",
+    "/stock/count",
+    "/stock/quarantine",
+  ]);
 
   it("match the expected matrix", () => {
     expect(Object.keys(ROUTES).sort()).toEqual(Object.keys(matrix).sort());
@@ -81,8 +97,16 @@ describe("routes", () => {
         (Object.keys(ROUTES) as RouteKey[]).filter((r) => canAccess(role, r) && !DETAIL_ONLY.has(r)),
       );
     }
-    expect(navFor("store_keeper").map((i) => i.href)).toEqual(["/store", "/catalogue"]);
-    expect(navFor("manager").map((i) => i.href)).toEqual(["/blocked", "/bikes", "/store", "/catalogue"]);
+    expect(navFor("store_keeper").map((i) => i.href)).toEqual(["/store", "/stock", "/catalogue"]);
+    expect(navFor("manager").map((i) => i.href)).toEqual([
+      "/blocked",
+      "/bikes",
+      "/purchasing",
+      "/reorder",
+      "/store",
+      "/stock",
+      "/catalogue",
+    ]);
   });
 });
 

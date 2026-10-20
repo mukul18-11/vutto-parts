@@ -56,6 +56,8 @@ type Options<T> = {
   /** The user id the page was rendered for (SESSION_CHANGED check on the server). */
   userId: string;
   onSuccess?: (data: T) => void;
+  /** A request_id saved with a draft (e.g. GRN entries in localStorage), read once on mount. */
+  initialRequestId?: () => string | null;
 };
 
 /**
@@ -64,7 +66,7 @@ type Options<T> = {
  */
 export function useRpcForm<P extends RpcEnvelope, T>(
   action: (input: P) => Promise<RpcResult<T>>,
-  { userId, onSuccess }: Options<T>,
+  { userId, onSuccess, initialRequestId }: Options<T>,
 ) {
   const router = useRouter();
   const online = useOnline();
@@ -74,8 +76,9 @@ export function useRpcForm<P extends RpcEnvelope, T>(
   const submittingRef = useRef(false);
 
   // Created on mount, not during render, so server and client never disagree.
+  const initialRef = useRef(initialRequestId);
   useEffect(() => {
-    requestIdRef.current ??= uuidv4();
+    requestIdRef.current ??= initialRef.current?.() ?? uuidv4();
   }, []);
 
   const submit = useCallback(
@@ -113,6 +116,11 @@ export function useRpcForm<P extends RpcEnvelope, T>(
   );
 
   const reset = useCallback(() => setState({ kind: "idle" }), []);
+  /** The request_id the next submit will use (so a draft can store it). */
+  const getRequestId = useCallback(() => {
+    requestIdRef.current ??= uuidv4();
+    return requestIdRef.current;
+  }, []);
 
-  return { submit, pending, disabled: pending || !online, online, state, reset };
+  return { submit, pending, disabled: pending || !online, online, state, reset, getRequestId };
 }

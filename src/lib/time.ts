@@ -75,3 +75,12 @@ export function formatHours(hours: number | string, t: TFunction): string {
   const minutes = Math.max(0, Math.round(Number(hours) * 60));
   return formatDuration(new Date(0), minutes * 60_000, t);
 }
+
+/** 'YYYY-MM-DD' plus n calendar days, computed on the date parts (never new Date(str)). */
+export function addDaysIST(date: string, days: number): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!match) throw new RangeError(`addDaysIST expects YYYY-MM-DD, got ${date}`);
+  const d = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + days));
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+}

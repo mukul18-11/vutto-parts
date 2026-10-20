@@ -336,6 +336,12 @@ isOneToOne: false
       referencedRelation: "grns"
       referencedColumns: ["workshop_id","id"]
     },{
+      foreignKeyName: "grn_lines_workshop_id_grn_id_fkey"
+      columns: ["workshop_id","grn_id"]
+isOneToOne: false
+      referencedRelation: "v_grn_list"
+      referencedColumns: ["workshop_id","id"]
+    },{
       foreignKeyName: "grn_lines_workshop_id_po_line_id_fkey"
       columns: ["workshop_id","po_line_id"]
 isOneToOne: false
@@ -384,6 +390,12 @@ isOneToOne: false
       columns: ["workshop_id","po_id"]
 isOneToOne: false
       referencedRelation: "purchase_orders"
+      referencedColumns: ["workshop_id","id"]
+    },{
+      foreignKeyName: "grns_workshop_id_po_id_fkey"
+      columns: ["workshop_id","po_id"]
+isOneToOne: false
+      referencedRelation: "v_po_list"
       referencedColumns: ["workshop_id","id"]
     }
                   ]
@@ -695,6 +707,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "purchase_orders"
       referencedColumns: ["workshop_id","id"]
+    },{
+      foreignKeyName: "po_lines_workshop_id_po_id_fkey"
+      columns: ["workshop_id","po_id"]
+isOneToOne: false
+      referencedRelation: "v_po_list"
+      referencedColumns: ["workshop_id","id"]
     }
                   ]
                 },"profiles": {
@@ -847,6 +865,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "bins"
       referencedColumns: ["workshop_id","id"]
+    },{
+      foreignKeyName: "stock_balances_workshop_id_bin_id_fkey"
+      columns: ["workshop_id","bin_id"]
+isOneToOne: false
+      referencedRelation: "v_count_bins"
+      referencedColumns: ["workshop_id","id"]
     }
                   ]
                 },"stock_moves": {
@@ -916,6 +940,12 @@ isOneToOne: false
       referencedRelation: "bins"
       referencedColumns: ["workshop_id","id"]
     },{
+      foreignKeyName: "stock_moves_workshop_id_from_bin_id_fkey"
+      columns: ["workshop_id","from_bin_id"]
+isOneToOne: false
+      referencedRelation: "v_count_bins"
+      referencedColumns: ["workshop_id","id"]
+    },{
       foreignKeyName: "stock_moves_workshop_id_grn_line_id_fkey"
       columns: ["workshop_id","grn_line_id"]
 isOneToOne: false
@@ -944,6 +974,12 @@ isOneToOne: false
       columns: ["workshop_id","to_bin_id"]
 isOneToOne: false
       referencedRelation: "bins"
+      referencedColumns: ["workshop_id","id"]
+    },{
+      foreignKeyName: "stock_moves_workshop_id_to_bin_id_fkey"
+      columns: ["workshop_id","to_bin_id"]
+isOneToOne: false
+      referencedRelation: "v_count_bins"
       referencedColumns: ["workshop_id","id"]
     }
                   ]
@@ -1088,6 +1124,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"v_count_bins": {
+                  Row: {
+                    "code": string | null,"count_requested_at": string | null,"id": string | null,"kind": Database["public"]['Enums']["bin_kind"] | null,"part_count": number | null,"total_on_hand": number | null,"workshop_id": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "bins_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_excess_on_order"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "bins_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "bins_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "workshops"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"v_emergency_buys": {
                   Row: {
                     "bill_photo_path": string | null,"bought_by": string | null,"created_at": string | null,"id": string | null,"is_simulated": boolean | null,"job_card_line_id": string | null,"note": string | null,"part_id": string | null,"premium": number | null,"qty": number | null,"qty_issued": number | null,"qty_to_stock": number | null,"reason": Database["public"]['Enums']["emergency_reason"] | null,"reference_price_paise": number | null,"unit_price_paise": number | null,"vendor_name": string | null,"workshop_id": string | null
@@ -1213,6 +1275,44 @@ isOneToOne: false
                   ComputedFields: never
                   Relationships: [
                     
+                  ]
+                },"v_grn_list": {
+                  Row: {
+                    "accepted_value_paise": number | null,"code": string | null,"id": string | null,"invoice_date": string | null,"is_simulated": boolean | null,"po_id": string | null,"qty_accepted": number | null,"qty_received": number | null,"qty_rejected": number | null,"received_at": string | null,"received_by": string | null,"received_by_name": string | null,"supplier_invoice_no": string | null,"workshop_id": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "grns_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_excess_on_order"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "grns_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "grns_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "workshops"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "grns_workshop_id_po_id_fkey"
+      columns: ["workshop_id","po_id"]
+isOneToOne: false
+      referencedRelation: "purchase_orders"
+      referencedColumns: ["workshop_id","id"]
+    },{
+      foreignKeyName: "grns_workshop_id_po_id_fkey"
+      columns: ["workshop_id","po_id"]
+isOneToOne: false
+      referencedRelation: "v_po_list"
+      referencedColumns: ["workshop_id","id"]
+    }
                   ]
                 },"v_inbound_shortfalls": {
                   Row: {
@@ -1396,6 +1496,102 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "v_stock_position"
       referencedColumns: ["part_id"]
+    }
+                  ]
+                },"v_po_list": {
+                  Row: {
+                    "cancel_reason": string | null,"code": string | null,"created_at": string | null,"expected_on": string | null,"grn_count": number | null,"id": string | null,"is_overdue": boolean | null,"is_simulated": boolean | null,"last_received_at": string | null,"lead_time_days": number | null,"line_count": number | null,"missing_price_count": number | null,"open_qty": number | null,"qty_accepted": number | null,"qty_cancelled": number | null,"qty_ordered": number | null,"qty_rejected": number | null,"sent_at": string | null,"status": Database["public"]['Enums']["po_status"] | null,"supplier_id": string | null,"supplier_name": string | null,"supplier_phone": string | null,"total_paise": number | null,"workshop_id": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "purchase_orders_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "purchase_orders_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_excess_on_order"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "purchase_orders_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "purchase_orders_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "workshops"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"v_quarantine_stock": {
+                  Row: {
+                    "bin_code": string | null,"bin_id": string | null,"last_in_at": string | null,"last_move_type": Database["public"]['Enums']["move_type"] | null,"last_note": string | null,"last_reason": string | null,"last_user_name": string | null,"name": string | null,"name_hi": string | null,"on_hand": number | null,"part_id": string | null,"sku": string | null,"uom": Database["public"]['Enums']["uom"] | null,"workshop_id": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "stock_balances_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "parts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stock_balances_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["part_id"]
+    },{
+      foreignKeyName: "stock_balances_workshop_id_bin_id_fkey"
+      columns: ["workshop_id","bin_id"]
+isOneToOne: false
+      referencedRelation: "bins"
+      referencedColumns: ["workshop_id","id"]
+    },{
+      foreignKeyName: "stock_balances_workshop_id_bin_id_fkey"
+      columns: ["workshop_id","bin_id"]
+isOneToOne: false
+      referencedRelation: "v_count_bins"
+      referencedColumns: ["workshop_id","id"]
+    }
+                  ]
+                },"v_receiving_stock": {
+                  Row: {
+                    "bin_code": string | null,"bin_id": string | null,"name": string | null,"name_hi": string | null,"oldest_in_at": string | null,"on_hand": number | null,"part_id": string | null,"reserved": number | null,"reserved_for": Json | null,"sku": string | null,"suggested_bin_code": string | null,"suggested_bin_id": string | null,"uom": Database["public"]['Enums']["uom"] | null,"workshop_id": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "stock_balances_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "parts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stock_balances_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["part_id"]
+    },{
+      foreignKeyName: "stock_balances_workshop_id_bin_id_fkey"
+      columns: ["workshop_id","bin_id"]
+isOneToOne: false
+      referencedRelation: "bins"
+      referencedColumns: ["workshop_id","id"]
+    },{
+      foreignKeyName: "stock_balances_workshop_id_bin_id_fkey"
+      columns: ["workshop_id","bin_id"]
+isOneToOne: false
+      referencedRelation: "v_count_bins"
+      referencedColumns: ["workshop_id","id"]
     }
                   ]
                 },"v_stock_position": {

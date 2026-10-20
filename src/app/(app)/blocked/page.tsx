@@ -4,6 +4,7 @@ import { AsOf } from "@/components/as-of";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
+import { TabLink } from "@/components/tab-link";
 import { Button } from "@/components/ui/button";
 import { requireRole, type SearchParams } from "@/lib/auth";
 import type { Database } from "@/lib/database.types";
@@ -177,21 +178,6 @@ function Kpi({ label, value, sub, danger, testId }: { label: string; value: stri
       </p>
       {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
     </div>
-  );
-}
-
-function TabLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      aria-current={active ? "page" : undefined}
-      className={cn(
-        "flex h-10 items-center rounded-lg px-3 text-sm font-medium",
-        active ? "bg-primary text-primary-foreground" : "border hover:bg-muted",
-      )}
-    >
-      {children}
-    </Link>
   );
 }
 

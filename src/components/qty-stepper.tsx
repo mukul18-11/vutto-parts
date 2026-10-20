@@ -10,8 +10,11 @@ import { cn } from "@/lib/utils";
 type Uom = Database["public"]["Enums"]["uom"];
 
 type Props = {
-  value: number;
+  /** null shows a blank input (e.g. blind receiving starts empty); ± then starts from min. */
+  value: number | null;
   onChange: (value: number) => void;
+  /** Called when the input is cleared; without it, clearing sets min. */
+  onClear?: () => void;
   min?: number;
   max?: number;
   uom: Uom;
@@ -19,6 +22,7 @@ type Props = {
   name?: string;
   disabled?: boolean;
   className?: string;
+  testId?: string;
 };
 
 function clamp(n: number, min: number, max: number) {
@@ -26,7 +30,19 @@ function clamp(n: number, min: number, max: number) {
 }
 
 /** Integer quantity with large ± buttons and the uom next to it (SPEC §13, §14). */
-export function QtyStepper({ value, onChange, min = 1, max = 999, uom, label, name, disabled, className }: Props) {
+export function QtyStepper({
+  value,
+  onChange,
+  onClear,
+  min = 1,
+  max = 999,
+  uom,
+  label,
+  name,
+  disabled,
+  className,
+  testId,
+}: Props) {
   const t = useT();
   const id = useId();
 
@@ -43,8 +59,8 @@ export function QtyStepper({ value, onChange, min = 1, max = 999, uom, label, na
           variant="outline"
           className="size-14 shrink-0"
           aria-label={t("common.decrease")}
-          disabled={disabled || value <= min}
-          onClick={() => onChange(clamp(value - 1, min, max))}
+          disabled={disabled || value === null || value <= min}
+          onClick={() => onChange(clamp((value ?? min) - 1, min, max))}
         >
           <MinusIcon className="size-6" />
         </Button>
@@ -55,10 +71,12 @@ export function QtyStepper({ value, onChange, min = 1, max = 999, uom, label, na
           pattern="[0-9]*"
           autoComplete="off"
           disabled={disabled}
-          value={Number.isFinite(value) ? String(value) : ""}
+          data-testid={testId}
+          value={value !== null && Number.isFinite(value) ? String(value) : ""}
           onChange={(e) => {
             const digits = e.target.value.replace(/\D/g, "").slice(0, 4);
-            onChange(digits === "" ? min : clamp(Number(digits), min, max));
+            if (digits === "" && onClear) onClear();
+            else onChange(digits === "" ? min : clamp(Number(digits), min, max));
           }}
           className="h-14 w-20 min-w-0 rounded-lg border border-input bg-background text-center text-lg tabular-nums"
         />
@@ -67,8 +85,8 @@ export function QtyStepper({ value, onChange, min = 1, max = 999, uom, label, na
           variant="outline"
           className="size-14 shrink-0"
           aria-label={t("common.increase")}
-          disabled={disabled || value >= max}
-          onClick={() => onChange(clamp(value + 1, min, max))}
+          disabled={disabled || (value !== null && value >= max)}
+          onClick={() => onChange(value === null ? min : clamp(value + 1, min, max))}
         >
           <PlusIcon className="size-6" />
         </Button>

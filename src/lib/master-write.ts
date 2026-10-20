@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import { z } from "zod";
 import { errorMessage, parseRpcError, type ErrorCode } from "@/lib/errors";
-import { getSessionContext } from "@/lib/auth";
+import { getSessionContext, type Profile } from "@/lib/auth";
 import { getLang } from "@/lib/i18n/server";
 import { fieldErrorsFrom, rpcBase } from "@/lib/rpc";
 import type { RpcFail, RpcResult } from "@/lib/rpc-form-logic";
@@ -19,6 +19,11 @@ type Options<S extends z.ZodType<z.infer<typeof rpcBase>>> = {
   input: unknown;
   /** Exactly one insert or update on a master data table (SPEC §11.2), with the user's client. */
   write: (supabase: Client, data: z.output<S>) => PromiseLike<{ error: PostgrestError | null }>;
+  /**
+   * Who may write, checked before the write (RLS enforces the same). Default: admin only.
+   * reorder_settings also allows the manager of that workshop (SPEC §11.2).
+   */
+  allow?: (profile: Profile, data: z.output<S>) => boolean;
 };
 
 // SQLSTATEs of master data writes that are the user's to fix, not app errors.
@@ -29,7 +34,8 @@ const RLS = "42501";
 /**
  * The server action for master data edits (CLAUDE.md rule 1 exception): the same envelope as
  * runRpc (Zod parse, rendered-user check, coded errors, revalidate), but one direct table write
- * under the admin-only RLS policies instead of an RPC. Only admin edits master data here. Trigger errors (VALIDATION with detail)
+ * under the master data RLS policies instead of an RPC. Only admin edits master data here, except
+ * reorder_settings, which the workshop's manager may also edit (opts.allow). Trigger errors (VALIDATION with detail)
  * arrive as P0001 and keep their detail; constraint violations map to VALIDATION.
  */
 export async function runTableWrite<S extends z.ZodType<z.infer<typeof rpcBase>>>(
@@ -55,7 +61,8 @@ export async function runTableWrite<S extends z.ZodType<z.infer<typeof rpcBase>>
     // RLS would also refuse, but an UPDATE refused by RLS changes 0 rows without an error.
     const { profile } = await getSessionContext();
     if (!profile) return fail("NO_PROFILE");
-    if (profile.role !== "admin") return fail("FORBIDDEN");
+    const allowed = opts.allow ? opts.allow(profile, parsed.data) : profile.role === "admin";
+    if (!allowed) return fail("FORBIDDEN");
 
     const { error } = await opts.write(supabase, parsed.data);
     if (!error) {
