@@ -1,0 +1,105 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Local Supabase only. The real keys are exported after `supabase start`.
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_DEMO_MODE: "true"
+      DEMO_PASSWORD: ci-local-demo-password
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Existing migrations are unchanged
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            base="$PR_BASE"
+          elif [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            base="$BEFORE"
+          else
+            # New branch: compare with where it left main. The very first push of main has no base.
+            base="$(git merge-base origin/main HEAD 2>/dev/null || true)"
+          fi
+          if [ -z "$base" ]; then
+            echo "No base commit to compare against; skipping."
+            exit 0
+          fi
+          scripts/ci/check-migrations-immutable.sh "$base"
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+
+      - run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+        env:
+          TZ: America/Los_Angeles
+
+      - name: Generate demo seed
+        if: hashFiles('scripts/seed/generate.ts') != ''
+        run: pnpm seed:gen
+
+      - name: Start local Supabase
+        run: pnpm supabase start -x realtime,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+
+      - name: Export local Supabase keys
+        run: |
+          pnpm -s supabase status -o json | node -e '
+            const s = JSON.parse(require("fs").readFileSync(0, "utf8"));
+            const out = {
+              SUPABASE_URL: s.API_URL,
+              NEXT_PUBLIC_SUPABASE_ANON_KEY: s.PUBLISHABLE_KEY ?? s.ANON_KEY,
+              SUPABASE_SERVICE_ROLE_KEY: s.SECRET_KEY ?? s.SERVICE_ROLE_KEY,
+              DATABASE_URL: s.DB_URL,
+            };
+            for (const [k, v] of Object.entries(out)) {
+              if (!v) throw new Error(`supabase status has no value for ${k}`);
+              console.log(`${k}=${v}`);
+            }
+          ' >> "$GITHUB_ENV"
+
+      - name: Database types are up to date
+        run: |
+          pnpm types
+          git diff --exit-code -- src/lib/database.types.ts
+
+      - name: Integration tests
+        run: pnpm test:db
+
+      - run: pnpm build
+
+      - name: Install Playwright browser
+        if: hashFiles('tests/e2e/**/*.spec.ts') != ''
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        if: hashFiles('tests/e2e/**/*.spec.ts') != ''
+        run: pnpm test:e2e
