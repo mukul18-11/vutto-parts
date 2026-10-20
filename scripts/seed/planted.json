@@ -8,6 +8,7 @@
         "reg_no": "DL3SFA2424",
         "po_code": "PO-NCR-000278",
         "sku": "HLA-SPL-G2",
+        "qty": 1,
         "expected_on": "2026-04-06"
       },
       {
@@ -16,6 +17,7 @@
         "reg_no": "HR26ZU6698",
         "po_code": "PO-NCR-000283",
         "sku": "SPS-P150-G2",
+        "qty": 1,
         "expected_on": "2026-04-07"
       },
       {
@@ -24,6 +26,7 @@
         "reg_no": "HR26TS2826",
         "po_code": "PO-NCR-000273",
         "sku": "SPD-C350-G2",
+        "qty": 1,
         "expected_on": "2026-04-07"
       }
     ],
@@ -107,6 +110,7 @@
         "reg_no": "RJ45PV8583",
         "po_code": "PO-JPR-000138",
         "sku": "HLA-SPL-G2",
+        "qty": 1,
         "expected_on": "2026-04-06"
       },
       {
@@ -115,6 +119,7 @@
         "reg_no": "RJ45ZB1343",
         "po_code": "PO-JPR-000141",
         "sku": "SPS-ACT-G3",
+        "qty": 1,
         "expected_on": "2026-04-07"
       },
       {
@@ -123,6 +128,7 @@
         "reg_no": "RJ60ZW9262",
         "po_code": "PO-JPR-000142",
         "sku": "TLA-P150-G2",
+        "qty": 1,
         "expected_on": "2026-04-07"
       }
     ],

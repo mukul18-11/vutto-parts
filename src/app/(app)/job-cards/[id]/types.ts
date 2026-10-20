@@ -1,5 +1,6 @@
 // Props shared by the job card page (server) and its client components. Quantities and fit
 // data come from the database as loaded; nothing here computes stock numbers.
+import type { FitBadgeRow } from "@/components/fit-badge";
 import type { Database } from "@/lib/database.types";
 
 type Enums = Database["public"]["Enums"];
@@ -7,7 +8,7 @@ type Fns = Database["public"]["Functions"];
 
 export type Candidate = Fns["line_candidates"]["Returns"][number];
 export type FindingCandidate = Fns["finding_candidates"]["Returns"][number];
-export type FitBadgeRow = Fns["fit_badge"]["Returns"][number];
+export type { FitBadgeRow };
 
 export type CardView = {
   id: string;

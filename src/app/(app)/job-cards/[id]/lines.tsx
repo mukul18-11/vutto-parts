@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { EtaBadge } from "@/components/eta-badge";
+import { FitBadge } from "@/components/fit-badge";
 import { QtyStepper } from "@/components/qty-stepper";
 import { RpcDialog } from "@/components/rpc-dialog";
 import { StatusBadge } from "@/components/status-badge";
@@ -69,7 +70,7 @@ function LineRow({ card, line: l, userId }: { card: CardView; line: LineView; us
       </div>
       <div role="cell" className="flex min-w-0 flex-wrap items-center gap-1">
         <StatusBadge enum="line_status" value={l.status} />
-        {!l.cancelled && <FitBadge line={l} bikeLabel={card.bike_label} />}
+        {!l.cancelled && <FitBadge fit={l.fit} isUniversal={l.is_universal} bikeLabel={card.bike_label} />}
         {!l.cancelled && uncovered > 0 && card.status === "confirmed" && l.eta && <EtaBadge part={l.eta} t={t} />}
       </div>
       <div role="cell" className="flex min-w-0 flex-wrap gap-2">
@@ -91,33 +92,6 @@ function QtyCell({ label, value, uom }: { label: string; value: number; uom: str
         {value} <span className="text-xs text-muted-foreground">{uom}</span>
       </span>
     </div>
-  );
-}
-
-/** SPEC §9.2 fit badge from fit_badge(line). */
-function FitBadge({ line, bikeLabel }: { line: LineView; bikeLabel: string }) {
-  const t = useT();
-  const fit = line.fit;
-  if (!fit) return null;
-  if (fit.badge === "red") {
-    return (
-      <Badge data-testid="fit" data-fit="red" className="h-auto bg-red-100 whitespace-normal text-red-900 dark:bg-red-950 dark:text-red-100">
-        {t("fit.red")}
-        {fit.last_flag_note ? ` · ${fit.last_flag_note}` : ""}
-      </Badge>
-    );
-  }
-  if (fit.badge === "amber") {
-    return (
-      <Badge data-testid="fit" data-fit="amber" className="h-auto bg-amber-100 whitespace-normal text-amber-900 dark:bg-amber-950 dark:text-amber-100">
-        {t("fit.amber", { bike: bikeLabel })}
-      </Badge>
-    );
-  }
-  return (
-    <Badge data-testid="fit" data-fit="green" className="bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
-      {line.is_universal ? t("fit.universal") : t("fit.green", { n: fit.confirmed_count })}
-    </Badge>
   );
 }
 

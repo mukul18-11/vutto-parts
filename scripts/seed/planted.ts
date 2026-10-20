@@ -19,7 +19,7 @@ import { midYear, regNo, requirement, time, type Ctx } from "./context";
 import { SeedError, World, type Bike, type Card, type Line } from "./engine";
 import { dateStr } from "./time";
 
-export type PlantedChain = { label: "A" | "B" | "C"; card_code: string; reg_no: string; po_code: string; sku: string; expected_on: string };
+export type PlantedChain = { label: "A" | "B" | "C"; card_code: string; reg_no: string; po_code: string; sku: string; qty: number; expected_on: string };
 
 export type PlantedWorkshop = {
   chains: PlantedChain[];
@@ -307,14 +307,15 @@ export function planWorkshop(c: Ctx): PlantedWorkshop {
       const missing = uncoveredSkus(w, r.card);
       if (missing.length !== 1) throw new SeedError(`chain ${ch.label} misses ${missing.join(",")}`);
       const sku = missing[0];
-      const po = w.sendPo(`${ws}:chain:${ch.label}`, ws, supplierOf(sku), [{ sku, qty: World.uncovered(lineOf(w, r.card, sku)) }], T(ch.sentDay, 15, 10));
+      const qty = World.uncovered(lineOf(w, r.card, sku));
+      const po = w.sendPo(`${ws}:chain:${ch.label}`, ws, supplierOf(sku), [{ sku, qty }], T(ch.sentDay, 15, 10));
       if (po.expectedOn! < 1) throw new SeedError(`chain ${ch.label} PO is not in the future`);
       if (ch.label === "A") {
         if (po.expectedOn !== 1) throw new SeedError(`chain A PO due on day ${po.expectedOn}, not tomorrow`);
         p.po_due_tomorrow = po.code;
       }
       // Listed A, B, C whatever order the POs went out in.
-      p.chains[["A", "B", "C"].indexOf(ch.label)] = { label: ch.label, card_code: r.card.code, reg_no: r.bike.regNo, po_code: po.code, sku, expected_on: dateStr(po.expectedOn!) };
+      p.chains[["A", "B", "C"].indexOf(ch.label)] = { label: ch.label, card_code: r.card.code, reg_no: r.bike.regNo, po_code: po.code, sku, qty, expected_on: dateStr(po.expectedOn!) };
       p.blocked.in_transit.push(r.card.code);
     });
   }

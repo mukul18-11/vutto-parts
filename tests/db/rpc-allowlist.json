@@ -12,6 +12,7 @@
   "create_bike",
   "create_job_card",
   "dead_stock",
+  "emergency_context",
   "finding_candidates",
   "fit_badge",
   "generate_draft_pos",
@@ -46,6 +47,7 @@
   "short_close_po",
   "start_repair",
   "stock_ledger",
+  "store_home_counts",
   "switch_line_part",
   "update_draft_findings",
   "update_draft_line"

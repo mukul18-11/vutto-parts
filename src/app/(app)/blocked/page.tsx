@@ -157,6 +157,7 @@ export default async function BlockedPage({ searchParams }: { searchParams: Prom
                 now={now}
                 inbound={tab === "inbound"}
                 href={link(`/job-cards/${row.job_card_id}`)}
+                emergencyHref={link("/store/emergency/{line}")}
                 userId={user.id}
                 workshopId={workshop.id}
               />
@@ -187,6 +188,7 @@ function BoardCard({
   now,
   inbound,
   href,
+  emergencyHref,
   userId,
   workshopId,
 }: {
@@ -195,6 +197,8 @@ function BoardCard({
   now: number;
   inbound: boolean;
   href: string;
+  /** Template with {line}: the emergency buy screen (bikes at the workshop only, SPEC §8.3). */
+  emergencyHref: string;
   userId: string;
   workshopId: string;
 }) {
@@ -243,6 +247,13 @@ function BoardCard({
                     {p.uncovered} {t(`enums.uom.${p.uom}`)}
                   </span>
                   <EtaBadge part={p} t={t} />
+                  {!inbound && (
+                    <Button asChild variant="outline" size="sm" className="h-9">
+                      <Link href={emergencyHref.replace("{line}", p.line_id)} data-testid={`emergency-${p.sku}`}>
+                        {t("issue.emergencyBuy")}
+                      </Link>
+                    </Button>
+                  )}
                 </span>
               </div>
               {p.reallocation_candidates.length > 0 && (

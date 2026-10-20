@@ -161,7 +161,13 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
         ) : (
           <ul className="flex flex-col divide-y rounded-xl border" data-testid="stock-ledger">
             {(ledgerRes.data ?? []).map((m) => (
-              <li key={m.id} className="flex flex-col gap-0.5 p-2 text-sm">
+              <li
+                key={m.id}
+                className="flex flex-col gap-0.5 p-2 text-sm"
+                data-testid="ledger-move"
+                data-move-type={m.move_type}
+                data-card={m.job_card_code ?? undefined}
+              >
                 <span className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">{t(`enums.move_type.${m.move_type}`)}</span>
                   <span className="tabular-nums">{`${m.qty} ${uom}`}</span>
