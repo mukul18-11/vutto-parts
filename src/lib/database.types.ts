@@ -893,14 +893,32 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "adjust_stock":
+            "add_job_card_line":
+{ Args: { "p_card_id": string,"p_part_id": string,"p_qty": number,"p_reason"?: string,"p_request_id": string }; Returns: Json
+                           },
+"adjust_stock":
 { Args: { "p_bin_id": string,"p_counted_qty": number,"p_expected_on_hand": number,"p_part_id": string,"p_reason": string,"p_request_id": string }; Returns: Json
+                           },
+"cancel_bike":
+{ Args: { "p_bike_id": string,"p_reason": string,"p_request_id": string }; Returns: Json
+                           },
+"cancel_job_card":
+{ Args: { "p_card_id": string,"p_reason": string,"p_request_id": string }; Returns: Json
+                           },
+"clear_needs_review":
+{ Args: { "p_card_id": string,"p_reason": string,"p_request_id": string }; Returns: Json
+                           },
+"close_job_card":
+{ Args: { "p_card_id": string,"p_drop_remaining": boolean,"p_reason"?: string,"p_request_id": string }; Returns: Json
                            },
 "confirm_job_card":
 { Args: { "p_card_id": string,"p_request_id": string }; Returns: Json
                            },
 "create_bike":
 { Args: { "p_findings": Json,"p_mfg_year": number,"p_model_id": string,"p_reg_no": string,"p_request_id": string,"p_variant_id"?: string,"p_workshop_id": string }; Returns: Json
+                           },
+"create_job_card":
+{ Args: { "p_bike_id": string,"p_request_id": string }; Returns: Json
                            },
 "finding_candidates":
 { Args: { "p_finding_id": string }; Returns: {
@@ -929,6 +947,9 @@ isOneToOne: false
 "putaway":
 { Args: { "p_from_bin_id": string,"p_part_id": string,"p_qty": number,"p_request_id": string,"p_to_bin_id": string }; Returns: Json
                            },
+"reallocate_reservation":
+{ Args: { "p_from_line_id": string,"p_qty": number,"p_reason": string,"p_request_id": string,"p_to_line_id": string }; Returns: Json
+                           },
 "request_bin_count":
 { Args: { "p_bin_id": string,"p_request_id": string }; Returns: Json
                            },
@@ -945,6 +966,9 @@ isOneToOne: false
                            },
 "set_bike_variant":
 { Args: { "p_bike_id": string,"p_request_id": string,"p_variant_id": string }; Returns: Json
+                           },
+"set_line_qty":
+{ Args: { "p_line_id": string,"p_qty": number,"p_reason": string,"p_request_id": string }; Returns: Json
                            },
 "set_needed_by":
 { Args: { "p_card_id": string,"p_date": string,"p_request_id": string }; Returns: Json
