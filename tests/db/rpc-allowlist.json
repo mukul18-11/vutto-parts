@@ -1,4 +1,5 @@
 [
+  "add_draft_line",
   "add_job_card_line",
   "adjust_stock",
   "cancel_bike",
@@ -9,6 +10,7 @@
   "create_bike",
   "create_job_card",
   "finding_candidates",
+  "generate_draft_pos",
   "health",
   "line_candidates",
   "mark_arrived",
@@ -16,14 +18,19 @@
   "part_candidates",
   "putaway",
   "reallocate_reservation",
+  "remove_draft_line",
+  "reorder_suggestions",
   "request_bin_count",
   "resolve_finding",
   "return_to_supplier",
   "search_parts",
+  "send_po",
   "set_bike_variant",
   "set_line_qty",
   "set_needed_by",
+  "set_po_expected_on",
   "start_repair",
   "switch_line_part",
-  "update_draft_findings"
+  "update_draft_findings",
+  "update_draft_line"
 ]

@@ -893,7 +893,10 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "add_job_card_line":
+            "add_draft_line":
+{ Args: { "p_part_id": string,"p_qty": number,"p_request_id": string,"p_supplier_id": string,"p_unit_price_paise"?: number,"p_workshop_id": string }; Returns: Json
+                           },
+"add_job_card_line":
 { Args: { "p_card_id": string,"p_part_id": string,"p_qty": number,"p_reason"?: string,"p_request_id": string }; Returns: Json
                            },
 "adjust_stock":
@@ -925,6 +928,9 @@ isOneToOne: false
               "auto_pick": boolean,"confirmed_count": number,"flagged_count": number,"is_universal": boolean,"name": string,"name_hi": string,"part_id": string,"part_type": string,"qty": number,"qty_per_bike": number,"rank": number,"sku": string,"source": Database["public"]['Enums']["fitment_source"],"uom": Database["public"]['Enums']["uom"]
             }[]
                            },
+"generate_draft_pos":
+{ Args: { "p_request_id": string,"p_workshop_id": string }; Returns: Json
+                           },
 "health":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
@@ -950,6 +956,14 @@ isOneToOne: false
 "reallocate_reservation":
 { Args: { "p_from_line_id": string,"p_qty": number,"p_reason": string,"p_request_id": string,"p_to_line_id": string }; Returns: Json
                            },
+"remove_draft_line":
+{ Args: { "p_line_id": string,"p_request_id": string }; Returns: Json
+                           },
+"reorder_suggestions":
+{ Args: { "p_as_of"?: string,"p_workshop_id": string }; Returns: {
+              "avg_daily_issue_28d": number,"effective_supplier_id": string,"enough_history": boolean,"is_auto": boolean,"lead_time_days": number,"name": string,"on_order": number,"order_qty": number,"outstanding_demand": number,"part_id": string,"projected": number,"rop": number,"sku": string,"usable_on_hand": number
+            }[]
+                           },
 "request_bin_count":
 { Args: { "p_bin_id": string,"p_request_id": string }; Returns: Json
                            },
@@ -964,6 +978,9 @@ isOneToOne: false
               "available": number,"category": Database["public"]['Enums']["part_category"],"fits": boolean,"is_universal": boolean,"name": string,"name_hi": string,"oem_part_no": string,"part_id": string,"part_type": string,"sku": string,"uom": Database["public"]['Enums']["uom"],"usable_on_hand": number
             }[]
                            },
+"send_po":
+{ Args: { "p_po_id": string,"p_request_id": string }; Returns: Json
+                           },
 "set_bike_variant":
 { Args: { "p_bike_id": string,"p_request_id": string,"p_variant_id": string }; Returns: Json
                            },
@@ -973,6 +990,9 @@ isOneToOne: false
 "set_needed_by":
 { Args: { "p_card_id": string,"p_date": string,"p_request_id": string }; Returns: Json
                            },
+"set_po_expected_on":
+{ Args: { "p_date": string,"p_po_id": string,"p_request_id": string }; Returns: Json
+                           },
 "start_repair":
 { Args: { "p_bike_id": string,"p_request_id": string }; Returns: Json
                            },
@@ -981,6 +1001,9 @@ isOneToOne: false
                            },
 "update_draft_findings":
 { Args: { "p_card_id": string,"p_findings": Json,"p_request_id": string }; Returns: Json
+                           },
+"update_draft_line":
+{ Args: { "p_line_id": string,"p_qty": number,"p_request_id": string,"p_unit_price_paise": number }; Returns: Json
                            }
           }
           Enums: {
