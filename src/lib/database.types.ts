@@ -245,6 +245,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "v_line_eta"
       referencedColumns: ["workshop_id","line_id"]
+    },{
+      foreignKeyName: "emergency_buys_workshop_id_job_card_line_id_fkey"
+      columns: ["workshop_id","job_card_line_id"]
+isOneToOne: false
+      referencedRelation: "v_missing_parts"
+      referencedColumns: ["workshop_id","line_id"]
     }
                   ]
                 },"finding_type_parts": {
@@ -449,6 +455,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "v_line_eta"
       referencedColumns: ["workshop_id","line_id"]
+    },{
+      foreignKeyName: "inspection_findings_workshop_id_job_card_line_id_fkey"
+      columns: ["workshop_id","job_card_line_id"]
+isOneToOne: false
+      referencedRelation: "v_missing_parts"
+      referencedColumns: ["workshop_id","line_id"]
     }
                   ]
                 },"job_card_lines": {
@@ -499,6 +511,18 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "job_cards"
       referencedColumns: ["workshop_id","id"]
+    },{
+      foreignKeyName: "job_card_lines_workshop_id_job_card_id_fkey"
+      columns: ["workshop_id","job_card_id"]
+isOneToOne: false
+      referencedRelation: "v_blocked_bikes"
+      referencedColumns: ["workshop_id","job_card_id"]
+    },{
+      foreignKeyName: "job_card_lines_workshop_id_job_card_id_fkey"
+      columns: ["workshop_id","job_card_id"]
+isOneToOne: false
+      referencedRelation: "v_inbound_shortfalls"
+      referencedColumns: ["workshop_id","job_card_id"]
     }
                   ]
                 },"job_cards": {
@@ -850,6 +874,12 @@ isOneToOne: false
       referencedRelation: "v_emergency_buys"
       referencedColumns: ["workshop_id","id"]
     },{
+      foreignKeyName: "stock_moves_workshop_id_emergency_buy_id_fkey"
+      columns: ["workshop_id","emergency_buy_id"]
+isOneToOne: false
+      referencedRelation: "v_emergency_buys_list"
+      referencedColumns: ["workshop_id","id"]
+    },{
       foreignKeyName: "stock_moves_workshop_id_fkey"
       columns: ["workshop_id"]
 isOneToOne: false
@@ -890,6 +920,12 @@ isOneToOne: false
       columns: ["workshop_id","job_card_line_id"]
 isOneToOne: false
       referencedRelation: "v_line_eta"
+      referencedColumns: ["workshop_id","line_id"]
+    },{
+      foreignKeyName: "stock_moves_workshop_id_job_card_line_id_fkey"
+      columns: ["workshop_id","job_card_line_id"]
+isOneToOne: false
+      referencedRelation: "v_missing_parts"
       referencedColumns: ["workshop_id","line_id"]
     },{
       foreignKeyName: "stock_moves_workshop_id_to_bin_id_fkey"
@@ -976,7 +1012,33 @@ isOneToOne: false
                 }
           }
           Views: {
-            "v_emergency_buys": {
+            "v_blocked_bikes": {
+                  Row: {
+                    "arrived_at": string | null,"bike_id": string | null,"bike_status": Database["public"]['Enums']["bike_status"] | null,"card_code": string | null,"confirmed_at": string | null,"job_card_id": string | null,"make": string | null,"mfg_year": number | null,"missing_count": number | null,"missing_parts": Json | null,"model": string | null,"needed_by": string | null,"needs_review_reason": string | null,"reg_no": string | null,"variant_name": string | null,"waiting_since": string | null,"workshop_id": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "job_cards_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_excess_on_order"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "job_cards_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "job_cards_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "workshops"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"v_emergency_buys": {
                   Row: {
                     "bill_photo_path": string | null,"bought_by": string | null,"created_at": string | null,"id": string | null,"is_simulated": boolean | null,"job_card_line_id": string | null,"note": string | null,"part_id": string | null,"premium": number | null,"qty": number | null,"qty_issued": number | null,"qty_to_stock": number | null,"reason": Database["public"]['Enums']["emergency_reason"] | null,"reference_price_paise": number | null,"unit_price_paise": number | null,"vendor_name": string | null,"workshop_id": string | null
                   }
@@ -1030,6 +1092,68 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "v_line_eta"
       referencedColumns: ["workshop_id","line_id"]
+    },{
+      foreignKeyName: "emergency_buys_workshop_id_job_card_line_id_fkey"
+      columns: ["workshop_id","job_card_line_id"]
+isOneToOne: false
+      referencedRelation: "v_missing_parts"
+      referencedColumns: ["workshop_id","line_id"]
+    }
+                  ]
+                },"v_emergency_buys_list": {
+                  Row: {
+                    "bill_photo_path": string | null,"bought_by": string | null,"bought_by_name": string | null,"bought_on": string | null,"card_code": string | null,"created_at": string | null,"id": string | null,"is_simulated": boolean | null,"job_card_id": string | null,"job_card_line_id": string | null,"note": string | null,"part_id": string | null,"part_name": string | null,"premium": number | null,"premium_paise": number | null,"qty": number | null,"qty_issued": number | null,"qty_to_stock": number | null,"reason": Database["public"]['Enums']["emergency_reason"] | null,"reference_price_paise": number | null,"reg_no": string | null,"sku": string | null,"total_paise": number | null,"unit_price_paise": number | null,"uom": Database["public"]['Enums']["uom"] | null,"vendor_name": string | null,"workshop_id": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "emergency_buys_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "parts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "emergency_buys_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["part_id"]
+    },{
+      foreignKeyName: "emergency_buys_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_excess_on_order"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "emergency_buys_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "emergency_buys_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "workshops"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "emergency_buys_workshop_id_job_card_line_id_fkey"
+      columns: ["workshop_id","job_card_line_id"]
+isOneToOne: false
+      referencedRelation: "job_card_lines"
+      referencedColumns: ["workshop_id","id"]
+    },{
+      foreignKeyName: "emergency_buys_workshop_id_job_card_line_id_fkey"
+      columns: ["workshop_id","job_card_line_id"]
+isOneToOne: false
+      referencedRelation: "v_line_eta"
+      referencedColumns: ["workshop_id","line_id"]
+    },{
+      foreignKeyName: "emergency_buys_workshop_id_job_card_line_id_fkey"
+      columns: ["workshop_id","job_card_line_id"]
+isOneToOne: false
+      referencedRelation: "v_missing_parts"
+      referencedColumns: ["workshop_id","line_id"]
     }
                   ]
                 },"v_excess_on_order": {
@@ -1040,9 +1164,73 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"v_inbound_shortfalls": {
+                  Row: {
+                    "bike_id": string | null,"bike_status": Database["public"]['Enums']["bike_status"] | null,"card_code": string | null,"confirmed_at": string | null,"job_card_id": string | null,"make": string | null,"mfg_year": number | null,"missing_count": number | null,"missing_parts": Json | null,"model": string | null,"needed_by": string | null,"needs_review_reason": string | null,"purchased_at": string | null,"reg_no": string | null,"variant_name": string | null,"workshop_id": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "job_cards_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_excess_on_order"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "job_cards_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "job_cards_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "workshops"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"v_line_eta": {
                   Row: {
                     "bike_id": string | null,"card_code": string | null,"eta_status": string | null,"expected_on": string | null,"is_overdue": boolean | null,"job_card_id": string | null,"line_id": string | null,"needed_by": string | null,"part_id": string | null,"po_code": string | null,"po_id": string | null,"reg_no": string | null,"uncovered": number | null,"workshop_id": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "job_card_lines_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "parts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_card_lines_part_id_fkey"
+      columns: ["part_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["part_id"]
+    },{
+      foreignKeyName: "job_card_lines_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_excess_on_order"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "job_card_lines_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "v_stock_position"
+      referencedColumns: ["workshop_id"]
+    },{
+      foreignKeyName: "job_card_lines_workshop_id_fkey"
+      columns: ["workshop_id"]
+isOneToOne: false
+      referencedRelation: "workshops"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"v_missing_parts": {
+                  Row: {
+                    "bike_id": string | null,"card_code": string | null,"eta_status": string | null,"expected_on": string | null,"is_overdue": boolean | null,"job_card_id": string | null,"line_id": string | null,"name": string | null,"needed_by": string | null,"part_id": string | null,"po_code": string | null,"po_id": string | null,"reallocation_candidates": Json | null,"reg_no": string | null,"sku": string | null,"uncovered": number | null,"uom": Database["public"]['Enums']["uom"] | null,"workshop_id": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1142,6 +1330,11 @@ isOneToOne: false
 "create_job_card":
 { Args: { "p_bike_id": string,"p_request_id": string }; Returns: Json
                            },
+"dead_stock":
+{ Args: { "p_as_of"?: string,"p_days"?: number,"p_workshop_id": string }; Returns: {
+              "available": number,"dead_qty": number,"last_activity_at": string,"name": string,"part_id": string,"price_source": string,"sku": string,"unit_price_paise": number,"uom": Database["public"]['Enums']["uom"],"value_paise": number,"workshop_id": string
+            }[]
+                           },
 "finding_candidates":
 { Args: { "p_finding_id": string }; Returns: {
               "auto_pick": boolean,"confirmed_count": number,"flagged_count": number,"is_universal": boolean,"name": string,"name_hi": string,"part_id": string,"part_type": string,"qty": number,"qty_per_bike": number,"rank": number,"sku": string,"source": Database["public"]['Enums']["fitment_source"],"uom": Database["public"]['Enums']["uom"]
@@ -1161,6 +1354,11 @@ isOneToOne: false
 "issue_to_job_card":
 { Args: { "p_bin_id": string,"p_line_id": string,"p_qty": number,"p_request_id": string }; Returns: Json
                            },
+"kpis":
+{ Args: { "p_as_of"?: string,"p_from": string,"p_to": string,"p_workshop_id": string }; Returns: {
+              "dead_stock_sku_n": number,"dead_stock_value_paise": number,"emergency_premium": number,"emergency_share": number,"emergency_spend_paise": number,"emergency_without_reference_n": number,"grn_value_paise": number,"issued_qty": number,"po_overdue_n": number,"wait_completed_n": number,"wait_median_hours": number,"wait_n": number,"wait_p90_hours": number,"wait_still_waiting_avg_hours": number,"wait_still_waiting_n": number,"wait_zero_pct": number,"wrong_fit_qty": number,"wrong_fit_rate": number
+            }[]
+                           },
 "line_candidates":
 { Args: { "p_line_id": string }; Returns: {
               "auto_pick": boolean,"confirmed_count": number,"flagged_count": number,"is_current": boolean,"is_universal": boolean,"name": string,"name_hi": string,"part_id": string,"qty_per_bike": number,"rank": number,"sku": string,"source": Database["public"]['Enums']["fitment_source"],"uom": Database["public"]['Enums']["uom"]
@@ -1178,6 +1376,11 @@ isOneToOne: false
 "part_candidates":
 { Args: { "p_part_type": string,"p_variant_id": string }; Returns: {
               "auto_pick": boolean,"confirmed_count": number,"flagged_count": number,"is_universal": boolean,"name": string,"name_hi": string,"part_id": string,"qty_per_bike": number,"rank": number,"sku": string,"source": Database["public"]['Enums']["fitment_source"],"uom": Database["public"]['Enums']["uom"]
+            }[]
+                           },
+"part_waits":
+{ Args: { "p_as_of"?: string,"p_from": string,"p_to": string,"p_workshop_id": string }; Returns: {
+              "bike_id": string,"card_code": string,"card_status": Database["public"]['Enums']["job_card_status"],"ended_at": string,"job_card_id": string,"reg_no": string,"started_at": string,"still_waiting": boolean,"wait_hours": number,"workshop_id": string
             }[]
                            },
 "putaway":
@@ -1237,6 +1440,11 @@ isOneToOne: false
                            },
 "start_repair":
 { Args: { "p_bike_id": string,"p_request_id": string }; Returns: Json
+                           },
+"stock_ledger":
+{ Args: { "p_before_id"?: number,"p_bin_id"?: string,"p_limit"?: number,"p_part_id": string,"p_workshop_id": string }; Returns: {
+              "bin_delta": number,"created_at": string,"emergency_buy_id": string,"emergency_vendor": string,"from_bin_code": string,"from_bin_id": string,"grn_code": string,"id": number,"is_simulated": boolean,"job_card_code": string,"job_card_line_id": string,"move_type": Database["public"]['Enums']["move_type"],"note": string,"part_id": string,"part_name": string,"po_code": string,"qty": number,"reason": string,"reg_no": string,"sku": string,"to_bin_code": string,"to_bin_id": string,"user_full_name": string,"user_id": string,"workshop_id": string
+            }[]
                            },
 "switch_line_part":
 { Args: { "p_line_id": string,"p_part_id": string,"p_request_id": string }; Returns: Json
