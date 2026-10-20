@@ -144,3 +144,38 @@ export async function closeCard(input: z.input<typeof closeSchema>) {
     }),
   });
 }
+
+const findingsSchema = rpcInput({
+  card_id: z.guid(),
+  findings: z
+    .array(
+      z.object({
+        finding_type_id: z.guid(),
+        qty: qty(1).nullable(),
+        notes: z.string().trim().max(500, "validation.tooLong").nullable(),
+      }),
+    )
+    .max(60),
+});
+/** update_draft_findings (SPEC §5.2): replaces the bike's findings and regenerates suggested lines. */
+export async function updateDraftFindings(input: z.input<typeof findingsSchema>) {
+  return runRpc({
+    route: ROUTE,
+    schema: findingsSchema,
+    input,
+    fn: "update_draft_findings",
+    toArgs: (d) => ({ p_card_id: d.card_id, p_findings: d.findings.map((f) => ({ ...f, notes: f.notes || null })) }),
+  });
+}
+
+const variantSchema = rpcInput({ bike_id: z.guid(), variant_id: z.guid() });
+/** set_bike_variant: sets an unknown variant on a draft card's bike and regenerates suggestions. */
+export async function setBikeVariant(input: z.input<typeof variantSchema>) {
+  return runRpc({
+    route: ROUTE,
+    schema: variantSchema,
+    input,
+    fn: "set_bike_variant",
+    toArgs: (d) => ({ p_bike_id: d.bike_id, p_variant_id: d.variant_id }),
+  });
+}

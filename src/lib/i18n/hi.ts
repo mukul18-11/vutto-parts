@@ -225,6 +225,18 @@ export const hi: Dictionary = {
   },
   jobCard: {
     neededBy: "कब तक चाहिए",
+    editFindings: "कमियाँ बदलें",
+    editFindingsTitle: "{reg} की कमियाँ बदलें",
+    editFindingsBody:
+      "नई कमियों से सुझाए गए पार्ट फिर से तय होंगे। हाथ से चुने या बदले पार्ट बने रहेंगे; हाथ से हल की गई कमियाँ फिर से हल करनी होंगी।",
+    saveFindings: "कमियाँ सेव करें",
+    suggestionsUpdated: "सुझाव अपडेट हुए: {lines} पार्ट, {unresolved} कमियाँ बाकी।",
+    unknownVariantBanner: "वेरिएंट पता नहीं: सिर्फ़ यूनिवर्सल पार्ट सुझाए जा सकते हैं। फ़िट होने वाले पार्ट के लिए वेरिएंट चुनें।",
+    setVariant: "वेरिएंट चुनें",
+    setVariantTitle: "{reg} का वेरिएंट चुनें",
+    setVariantBody: "{year} में बिके इस मॉडल के वेरिएंट। सुझाए गए पार्ट फिर से तय होंगे।",
+    chooseVariant: "वेरिएंट चुनें",
+    noVariantForYear: "इस मॉडल का कोई वेरिएंट {year} का नहीं है। कैटलॉग में जोड़ें।",
     neededByDefault: "खाली हो तो कन्फर्म करते समय तय होगा।",
     saveNeededBy: "तारीख सेव करें",
     clearReview: "हटाएँ",

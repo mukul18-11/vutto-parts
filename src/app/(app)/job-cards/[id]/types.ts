@@ -21,6 +21,8 @@ export type CardView = {
   reg_no: string;
   bike_status: Enums["bike_status"];
   variant_id: string | null;
+  model_id: string;
+  mfg_year: number;
   /** "Hero Splendor Plus BS6 Self Alloy i3S 2021" for the amber fit message. */
   bike_label: string;
   /** Another open (draft/confirmed) card on this bike, when this one is cancelled. */
@@ -59,6 +61,7 @@ export type Holder = {
 
 export type FindingView = {
   id: string;
+  finding_type_id: string;
   code: string;
   label: string;
   area: Enums["finding_area"];

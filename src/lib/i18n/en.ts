@@ -297,6 +297,18 @@ export const en = {
   },
   jobCard: {
     neededBy: "Needed by",
+    editFindings: "Edit findings",
+    editFindingsTitle: "Edit findings of {reg}",
+    editFindingsBody:
+      "Suggested parts are worked out again from the new findings. Parts you picked or switched by hand stay; findings you resolved by hand need resolving again.",
+    saveFindings: "Save findings",
+    suggestionsUpdated: "Suggestions updated: {lines} parts, {unresolved} unresolved findings.",
+    unknownVariantBanner: "Variant unknown: only universal parts can be suggested. Set the variant to get fitting parts.",
+    setVariant: "Set variant",
+    setVariantTitle: "Set the variant of {reg}",
+    setVariantBody: "Variants of this model sold in {year}. Suggested parts are worked out again.",
+    chooseVariant: "Choose a variant",
+    noVariantForYear: "No variant of this model covers {year}. Add one in the catalogue.",
     neededByDefault: "Set on confirm if empty.",
     saveNeededBy: "Save date",
     clearReview: "Clear",

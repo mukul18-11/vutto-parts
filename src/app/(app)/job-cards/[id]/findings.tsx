@@ -12,19 +12,33 @@ import { resolveFinding } from "./actions";
 import type { CardView, FindingView } from "./types";
 
 /** Inspection findings with their resolution (SPEC §9.1); unresolved ones get a part picker on drafts. */
-export function Findings({ card, findings, userId }: { card: CardView; findings: FindingView[]; userId: string }) {
+export function Findings({
+  card,
+  findings,
+  userId,
+  edit,
+}: {
+  card: CardView;
+  findings: FindingView[];
+  userId: string;
+  /** The "Edit findings" action on draft cards. */
+  edit?: React.ReactNode;
+}) {
   const t = useT();
   const unresolved = findings.filter((f) => !f.line_id && !f.no_part_reason).length;
   return (
     <section aria-labelledby="findings" className="flex flex-col gap-2">
-      <h2 id="findings" className="text-lg font-semibold">
-        {t("jobCard.findings")}{" "}
-        {unresolved > 0 && (
-          <Badge className="bg-red-100 align-middle text-red-900 dark:bg-red-950 dark:text-red-100">
-            {t("jobCard.unresolvedCount", { n: unresolved })}
-          </Badge>
-        )}
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="findings" className="text-lg font-semibold">
+          {t("jobCard.findings")}{" "}
+          {unresolved > 0 && (
+            <Badge className="bg-red-100 align-middle text-red-900 dark:bg-red-950 dark:text-red-100">
+              {t("jobCard.unresolvedCount", { n: unresolved })}
+            </Badge>
+          )}
+        </h2>
+        {edit}
+      </div>
       {findings.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("jobCard.noFindings")}</p>
       ) : (

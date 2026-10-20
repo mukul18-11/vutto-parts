@@ -3,23 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { ErrorDetail } from "@/components/error-detail";
+import { FindingsChecklist, findingsInput, type FindingTypeOption, type PickedFindings } from "@/components/findings-checklist";
 import { Field, inputClass, NativeSelect } from "@/components/forms/field";
 import { RpcFormStatus } from "@/components/rpc-form-status";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { Database } from "@/lib/database.types";
 import type { MessageKey } from "@/lib/i18n";
-import { useLang, useT } from "@/lib/i18n/client";
+import { useT } from "@/lib/i18n/client";
 import { useRpcForm } from "@/lib/use-rpc-form";
 import { createBike } from "./actions";
 
-type Area = Database["public"]["Enums"]["finding_area"];
 type Model = { id: string; make: string; model: string };
 type Variant = { id: string; model_id: string; name: string; year_from: number; year_to: number | null };
-type FindingType = { id: string; code: string; label_en: string; label_hi: string; area: Area };
-type Picked = { qty: string; notes: string };
-
-const AREAS: Area[] = ["engine", "brakes", "drivetrain", "electrical", "body", "tyres_suspension"];
 
 type Props = {
   userId: string;
@@ -27,7 +22,7 @@ type Props = {
   currentYear: number;
   models: Model[];
   variants: Variant[];
-  findingTypes: FindingType[];
+  findingTypes: FindingTypeOption[];
   /** Job card link with {id} for the new card's id (keeps ?ws= for admin). */
   cardHref: string;
 };
@@ -35,13 +30,12 @@ type Props = {
 /** New bike with its inspection findings (SPEC §5.2 create_bike). */
 export function NewBikeForm({ userId, workshopId, currentYear, models, variants, findingTypes, cardHref }: Props) {
   const t = useT();
-  const lang = useLang();
   const router = useRouter();
   const [regNo, setRegNo] = useState("");
   const [modelId, setModelId] = useState("");
   const [year, setYear] = useState("");
   const [variantId, setVariantId] = useState("");
-  const [picked, setPicked] = useState<Record<string, Picked>>({});
+  const [picked, setPicked] = useState<PickedFindings>({});
 
   const { submit, pending, disabled, state } = useRpcForm(createBike, {
     userId,
@@ -63,23 +57,13 @@ export function NewBikeForm({ userId, workshopId, currentYear, models, variants,
   );
   const variantValue = variantOptions.some((v) => v.id === variantId) ? variantId : "";
 
-  const byArea = useMemo(() => {
-    const groups = new Map<Area, FindingType[]>();
-    for (const ft of findingTypes) groups.set(ft.area, [...(groups.get(ft.area) ?? []), ft]);
-    return AREAS.filter((a) => groups.has(a)).map((a) => [a, groups.get(a)!] as const);
-  }, [findingTypes]);
-
   const values = () => ({
     workshop_id: workshopId,
     reg_no: regNo,
     model_id: modelId,
     variant_id: variantValue || null,
     mfg_year: yearNum ?? Number.NaN,
-    findings: Object.entries(picked).map(([finding_type_id, p]) => ({
-      finding_type_id,
-      qty: /^\d+$/.test(p.qty) ? Number(p.qty) : null,
-      notes: p.notes.trim() || null,
-    })),
+    findings: findingsInput(picked),
   });
   const run = () => submit(values());
 
@@ -93,16 +77,6 @@ export function NewBikeForm({ userId, workshopId, currentYear, models, variants,
       return t("bikes.yearRange", { min: detail?.min ?? 1995, max: detail?.max ?? currentYear });
     return null;
   };
-
-  const toggle = (id: string, on: boolean) =>
-    setPicked((prev) => {
-      const next = { ...prev };
-      if (on) next[id] = { qty: "", notes: "" };
-      else delete next[id];
-      return next;
-    });
-  const update = (id: string, patch: Partial<Picked>) =>
-    setPicked((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
 
   return (
     <form
@@ -180,51 +154,7 @@ export function NewBikeForm({ userId, workshopId, currentYear, models, variants,
         <h2 className="text-lg font-semibold">
           {t("bikes.findings")} <span className="text-sm font-normal text-muted-foreground">({Object.keys(picked).length})</span>
         </h2>
-        {byArea.map(([area, types]) => (
-          <fieldset key={area} className="flex flex-col gap-1 rounded-xl border p-3">
-            <legend className="px-1 font-medium">{t(`enums.finding_area.${area}`)}</legend>
-            {types.map((ft) => {
-              const p = picked[ft.id];
-              const label = lang === "hi" ? ft.label_hi : ft.label_en;
-              return (
-                <div key={ft.id} className="flex flex-col gap-2 border-b py-1 last:border-b-0">
-                  <label className="flex min-h-11 items-center gap-3">
-                    <input
-                      type="checkbox"
-                      className="size-5 shrink-0"
-                      data-testid={`finding-${ft.code}`}
-                      checked={Boolean(p)}
-                      onChange={(e) => toggle(ft.id, e.target.checked)}
-                    />
-                    <span className="min-w-0 break-words">{label}</span>
-                  </label>
-                  {p && (
-                    <div className="grid grid-cols-[6rem_1fr] gap-2 pb-2 pl-8">
-                      <Input
-                        aria-label={t("bikes.findingQty", { finding: label })}
-                        placeholder={t("bikes.qtyAuto")}
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength={3}
-                        className={inputClass}
-                        value={p.qty}
-                        onChange={(e) => update(ft.id, { qty: e.target.value.replace(/\D/g, "").slice(0, 3) })}
-                      />
-                      <Input
-                        aria-label={t("bikes.findingNotes", { finding: label })}
-                        placeholder={t("bikes.notes")}
-                        maxLength={500}
-                        className={inputClass}
-                        value={p.notes}
-                        onChange={(e) => update(ft.id, { notes: e.target.value })}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </fieldset>
-        ))}
+        <FindingsChecklist findingTypes={findingTypes} picked={picked} onChange={setPicked} />
       </section>
 
       <div className="sticky bottom-0 -mx-4 flex flex-col gap-2 border-t bg-background p-4">

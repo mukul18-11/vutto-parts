@@ -12,6 +12,7 @@ import { withWs } from "@/lib/links";
 import { createClient } from "@/lib/supabase/server";
 import { formatIST } from "@/lib/time";
 import { CardActions, NeededBy, NeedsReviewBanner } from "./card-actions";
+import { EditFindings, SetVariant } from "./draft-edits";
 import { Findings } from "./findings";
 import { Lines } from "./lines";
 import type { CardView, FindingView, Holder, LineView } from "./types";
@@ -21,6 +22,7 @@ export const metadata: Metadata = { title: "Job card · Vutto Parts" };
 type Enums = Database["public"]["Enums"];
 type FindingRow = {
   id: string;
+  finding_type_id: string;
   code: string;
   label_en: string;
   label_hi: string;
@@ -51,7 +53,7 @@ export default async function JobCardPage({
   const cardRes = await supabase
     .from("job_cards")
     .select(
-      "id, workshop_id, code, status, needed_by, needs_review_reason, bike_id, bike:bikes(id, reg_no, status, mfg_year, variant_id, model:vehicle_models(make, model), variant:model_variants(name))",
+      "id, workshop_id, code, status, needed_by, needs_review_reason, bike_id, bike:bikes(id, reg_no, status, mfg_year, model_id, variant_id, model:vehicle_models(make, model), variant:model_variants(name))",
     )
     .eq("id", id)
     .maybeSingle();
@@ -75,7 +77,7 @@ export default async function JobCardPage({
       .order("id"),
     supabase
       .from("v_job_card_findings")
-      .select("id, code, label_en, label_hi, area, qty, notes, job_card_line_id, no_part_reason, applicable_part_type")
+      .select("id, finding_type_id, code, label_en, label_hi, area, qty, notes, job_card_line_id, no_part_reason, applicable_part_type")
       .eq("job_card_id", id)
       .order("created_at")
       .order("id"),
@@ -124,6 +126,26 @@ export default async function JobCardPage({
   if (blockedRes.error) throw blockedRes.error;
   const blockedCards = new Set((blockedRes.data ?? []).map((b) => b.job_card_id));
 
+  // Draft edits (SPEC §5.2): finding types for "Edit findings" (active ones, plus any the bike
+  // already has so nothing is dropped silently) and the model's variants for "Set variant".
+  const [typesRes, variantsRes] = await Promise.all([
+    isDraft
+      ? supabase.from("finding_types").select("id, code, label_en, label_hi, area, is_active").order("label_en")
+      : Promise.resolve({ data: [], error: null }),
+    isDraft && !bike.variant_id
+      ? supabase
+          .from("model_variants")
+          .select("id, name, year_from, year_to")
+          .eq("model_id", bike.model_id)
+          .order("year_from")
+          .order("name")
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (typesRes.error) throw typesRes.error;
+  if (variantsRes.error) throw variantsRes.error;
+  const usedTypes = new Set(findings.map((f) => f.finding_type_id));
+  const findingTypes = (typesRes.data ?? []).filter((ft) => ft.is_active || usedTypes.has(ft.id));
+
   const etaByLine = new Map((etaRes.data ?? []).map((e) => [e.line_id as string, e]));
   const lineIndex = new Map(live.map((l, i) => [l.id, i]));
   const lineViews: LineView[] = lines
@@ -170,6 +192,7 @@ export default async function JobCardPage({
     const i = unresolvedIndex.get(f.id);
     return {
       id: f.id,
+      finding_type_id: f.finding_type_id,
       code: f.code,
       label: lang === "hi" ? f.label_hi : f.label_en,
       area: f.area,
@@ -195,6 +218,8 @@ export default async function JobCardPage({
     reg_no: bike.reg_no,
     bike_status: bike.status,
     variant_id: bike.variant_id,
+    model_id: bike.model_id,
+    mfg_year: bike.mfg_year,
     bike_label: [bike.model?.make, bike.model?.model, bike.variant?.name, bike.mfg_year].filter(Boolean).join(" "),
     open_card_id: openRes.data?.id ?? null,
   };
@@ -230,7 +255,14 @@ export default async function JobCardPage({
           />
         </section>
 
-        <Findings card={card} findings={findingViews} userId={user.id} />
+        {isDraft && !card.variant_id && <SetVariant card={card} variants={variantsRes.data ?? []} userId={user.id} />}
+
+        <Findings
+          card={card}
+          findings={findingViews}
+          userId={user.id}
+          edit={isDraft && <EditFindings card={card} findings={findingViews} findingTypes={findingTypes} userId={user.id} />}
+        />
 
         <Lines card={card} lines={lineViews} userId={user.id} />
 
