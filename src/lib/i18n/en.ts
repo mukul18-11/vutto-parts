@@ -76,6 +76,8 @@ const enums: EnumLabels = {
 export const en = {
   common: {
     appName: "Vutto Parts",
+    // Shown after the Vutto logo (the logo stands in for the word "Vutto").
+    appProduct: "Parts",
     scrollHint: "Scroll sideways for more columns →",
     signOut: "Sign out",
     cancel: "Cancel",

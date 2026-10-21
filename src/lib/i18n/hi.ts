@@ -5,6 +5,7 @@ import type { Dictionary } from "./en";
 export const hi: Dictionary = {
   common: {
     appName: "Vutto Parts",
+    appProduct: "Parts",
     scrollHint: "और कॉलम देखने के लिए बगल में स्क्रॉल करें →",
     signOut: "साइन आउट",
     cancel: "रद्द करें",

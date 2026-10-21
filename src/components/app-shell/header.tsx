@@ -3,6 +3,7 @@ import { getT } from "@/lib/i18n/server";
 import type { Profile, Workshop } from "@/lib/auth";
 import { DEFAULT_WORKSHOP_CODE } from "@/lib/auth";
 import { navFor } from "@/lib/permissions";
+import { Brand } from "./brand";
 import { LanguageToggle } from "./language-toggle";
 import { NavLinks } from "./nav-links";
 import { SignOutButton } from "./sign-out-button";
@@ -15,10 +16,10 @@ export async function AppHeader({ profile, workshops }: { profile: Profile; work
   const items = navFor(profile.role);
 
   return (
-    <header className="border-b bg-background print:hidden">
+    <header className="border-b bg-background shadow-sm print:hidden">
       <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="font-semibold">{t("common.appName")}</span>
+          <Brand name={t("common.appName")} product={t("common.appProduct")} />
           <div className="flex items-center gap-1">
             <LanguageToggle />
             <SignOutButton />
