@@ -1,6 +1,7 @@
 // The 90-day before/after simulation (SPEC §15, seed catalogue §5). Each working day (Monday to
 // Saturday) runs fixed phases, each in its own time window so the ledger stays in time order:
-//   09:30 deliveries (GRN, then putaway)     10:00 purchases (after period: confirm at purchase)
+//   09:30 deliveries (GRN, then putaway)     10:00 purchases (after period: confirm at purchase;
+//                                            the bike arrives 2–5 days later)
 //   11:00 arrivals                           12:00 bay-ins (before period: confirm here) and issues
 //   14:00 emergency buys for blocked bikes   16:00 closes (repair done, every part fitted)
 //   18:00 draft PO generation, sent the same day (skipped on the last simulated day)
@@ -31,6 +32,13 @@ export const AFTER_FROM_DAY = -45;
 const NO_SIM_EMERGENCY_FROM = -7;
 // §5.7 caps findings at 5 per bike; at 5 the template exceeds the 60,000-row budget, so the cap is 4.
 export const MAX_FINDINGS = 4;
+/**
+ * Purchase to arrival: 2–5 days (pickup from the seller, RC and NOC paperwork). A card confirmed at
+ * purchase sends its PO that evening, so parts from the 3-day OEM distributor are usually in before
+ * the bike; only the 5- and 7-day dealer parts (RE, Honda) still make an after-period bike wait.
+ */
+const TRANSIT_MIN = 2;
+const TRANSIT_SPAN = 4;
 
 const VENDORS: Record<WorkshopCode, string[]> = {
   NCR: ["Karol Bagh spares counter", "Kashmere Gate local shop", "Mayapuri spares market"],
@@ -134,7 +142,7 @@ export class Simulator {
       const { bike, card } = this.w.createBike({ key: `${ws}:sim:${day}:${i}`, ws, regNo: regNo(this.c), modelKey: model.key, variantKey: v.key, mfgYear: year, findings, t });
       const before = day < AFTER_FROM_DAY;
       if (!before) this.w.confirmCard(card, t);
-      const arriveDay = nextWorkday(day + Math.floor(rng() * 4));
+      const arriveDay = nextWorkday(day + TRANSIT_MIN + Math.floor(rng() * TRANSIT_SPAN));
       const bayDay = nextWorkday(arriveDay + Math.floor(rng() * 3));
       const closeDay = nextWorkday(bayDay + 1 + Math.floor(rng() * 2));
       this.bikes.push({ bike, card, before, arriveDay, bayDay, closeDay, emergency: null });

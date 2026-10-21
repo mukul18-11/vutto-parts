@@ -218,7 +218,8 @@ export function planWorkshop(c: Ctx): PlantedWorkshop {
       p.po_overdue = po.code;
       p.blocked.overdue_po.push(r.card.code);
     });
-    step(o.sentDay + 1, 15, 0, () => w.markArrived(r.bike, T(o.sentDay + 1, 15, 0)));
+    // Arrives 5 days after purchase (the simulator's longest transit): blocked about 5 days, not over a week.
+    step(o.sentDay + 3, 15, 0, () => w.markArrived(r.bike, T(o.sentDay + 3, 15, 0)));
   }
 
   // 3. Partial receipt with damage: three bikes wait for one part; 2 accepted (left in receiving,
