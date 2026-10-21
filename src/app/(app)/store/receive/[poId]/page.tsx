@@ -22,34 +22,29 @@ export default async function ReceivePoPage({
   searchParams: Promise<SearchParams>;
 }) {
   const [{ poId }, sp] = await Promise.all([params, searchParams]);
-  const { user, profile, workshop } = await requireRole("/store/receive", sp);
   if (!z.guid().safeParse(poId).success) notFound();
-  const t = await getT();
   const supabase = await createClient();
-  const link = (href: string) => withWs(href, profile.role, workshop.code);
 
-  const poRes = await supabase
-    .from("v_po_list")
-    .select("id, workshop_id, code, status, supplier_name")
-    .eq("id", poId)
-    .eq("workshop_id", workshop.id)
-    .maybeSingle();
-  if (poRes.error) throw poRes.error;
-  const po = poRes.data;
-  if (!po) notFound();
-
-  const receivable = po.status === "sent" || po.status === "partially_received";
-  const [linesRes, rcvRes] = await Promise.all([
+  // One round trip with the route guard: the PO, its open lines and the receiving bins are read
+  // together (RLS scopes them; the workshop is checked once the guard resolves).
+  const [{ user, profile, workshop }, t, poRes, linesRes, rcvRes] = await Promise.all([
+    requireRole("/store/receive", sp),
+    getT(),
+    supabase.from("v_po_list").select("id, workshop_id, code, status, supplier_name").eq("id", poId).maybeSingle(),
     supabase
       .from("po_lines")
       .select("id, unit_price_paise, open_qty, parts(sku, name, name_hi, uom)")
-      .eq("po_id", po.id as string)
+      .eq("po_id", poId)
       .gt("open_qty", 0),
-    supabase.from("bins").select("code").eq("workshop_id", workshop.id).eq("kind", "receiving").maybeSingle(),
+    supabase.from("bins").select("code, workshop_id").eq("kind", "receiving"),
   ]);
-  if (linesRes.error) throw linesRes.error;
-  if (rcvRes.error) throw rcvRes.error;
+  for (const res of [poRes, linesRes, rcvRes]) if (res.error) throw res.error;
+  const link = (href: string) => withWs(href, profile.role, workshop.code);
+  const po = poRes.data;
+  if (!po || po.workshop_id !== workshop.id) notFound();
+  const rcvBin = (rcvRes.data ?? []).find((b) => b.workshop_id === workshop.id);
 
+  const receivable = po.status === "sent" || po.status === "partially_received";
   // Blind receiving: the form never gets the ordered or open quantity.
   const lines = (linesRes.data ?? [])
     .map((l) => {
@@ -69,7 +64,7 @@ export default async function ReceivePoPage({
         receivable={receivable && lines.length > 0}
         lines={lines}
         today={istToday()}
-        rcvBinCode={rcvRes.data?.code ?? `${workshop.code}-RCV`}
+        rcvBinCode={rcvBin?.code ?? `${workshop.code}-RCV`}
         links={{ list: link("/store/receive"), putaway: link("/store/putaway"), issue: link("/store/issue/{id}") }}
       />
     </>

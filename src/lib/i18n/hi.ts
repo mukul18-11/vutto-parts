@@ -5,6 +5,7 @@ import type { Dictionary } from "./en";
 export const hi: Dictionary = {
   common: {
     appName: "Vutto Parts",
+    scrollHint: "और कॉलम देखने के लिए बगल में स्क्रॉल करें →",
     signOut: "साइन आउट",
     cancel: "रद्द करें",
     retry: "फिर से कोशिश करें",
@@ -27,9 +28,9 @@ export const hi: Dictionary = {
     submit: "साइन इन",
     wrongPassword: "ईमेल या पासवर्ड गलत है।",
     demoHeading: "डेमो लॉगिन",
-    demoNote: "साझा डेमो खाते। पासवर्ड हर 30 मिनट में अपने-आप बहाल हो जाते हैं।",
+    demoNote: "साझा डेमो खाते। पासवर्ड हर 2 घंटे में अपने-आप बहाल हो जाते हैं।",
     demoPasswordChanged:
-      "किसी और विज़िटर ने इस डेमो खाते का पासवर्ड बदल दिया है। यह 30 मिनट में बहाल हो जाएगा; तब तक कोई दूसरी भूमिका आज़माएँ।",
+      "किसी और विज़िटर ने इस डेमो खाते का पासवर्ड बदल दिया है। यह 2 घंटे में बहाल हो जाएगा; तब तक कोई दूसरी भूमिका आज़माएँ।",
     signInAs: "{name} के रूप में साइन इन करें",
     failed: "साइन इन नहीं हो सका। फिर से कोशिश करें।",
     demo: {
@@ -116,6 +117,8 @@ export const hi: Dictionary = {
     body: "कुछ भी खोया नहीं। फिर से कोशिश करें।",
     bodyRef: "कुछ भी खोया नहीं। फिर से कोशिश करें, और बार-बार हो तो रेफ़ {ref} बताएँ।",
     retry: "फिर से कोशिश करें",
+    unavailable: "डेमो डेटाबेस जाग रहा है या उपलब्ध नहीं है – एक मिनट में फिर कोशिश करें",
+    unavailableBody: "कुछ भी खोया नहीं। मुफ़्त डेमो डेटाबेस खाली रहने पर सो जाता है और जागने में एक मिनट तक लगता है।",
   },
   form: {
     reason: "कारण",
@@ -897,6 +900,7 @@ export const hi: Dictionary = {
     price: "इकाई क़ीमत",
     reference: "संदर्भ",
     premium: "प्रीमियम",
+    referenceLine: "संदर्भ {reference} · {premium}",
     reason: "कारण",
     by: "ख़रीदने वाले",
     noReference: "–",
@@ -947,7 +951,8 @@ export const hi: Dictionary = {
     deadStockSkus: "{n} SKU",
     seeDeadStock: "डेड स्टॉक देखें",
     wrongFit: "गलत फिटमेंट दर",
-    wrongFitDef: "अवधि में गलत फिटमेंट से लौटी यूनिट ÷ जारी यूनिट।",
+    wrongFitDef: "गलत फिटमेंट से लौटी यूनिट ÷ जारी यूनिट। पहले से ऑर्डर करने से फिटमेंट नहीं बदलता, इसलिए यह एक ही आंकड़ा है, पहले बनाम बाद नहीं।",
+    wrongFitLast45: "पिछले 45 दिन ({from} – {to})",
     wrongFitQty: "{issued} जारी में से {qty}",
     seeReturns: "वापसी देखें",
     overduePos: "देर वाले PO",

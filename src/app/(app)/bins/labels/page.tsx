@@ -52,7 +52,7 @@ export default async function BinLabelsPage({ searchParams }: { searchParams: Pr
           actions={
             <>
               {binId && (
-                <Button asChild variant="outline" className="h-11">
+                <Button asChild variant="outline" className="h-12">
                   <Link href={link("/bins/labels")}>{t("labels.printAll")}</Link>
                 </Button>
               )}
@@ -66,7 +66,7 @@ export default async function BinLabelsPage({ searchParams }: { searchParams: Pr
         <EmptyState
           message={t("labels.empty")}
           action={
-            <Button asChild variant="outline" className="h-11">
+            <Button asChild variant="outline" className="h-12">
               <Link href={link("/catalogue?tab=bins")}>{t("labels.toBins")}</Link>
             </Button>
           }

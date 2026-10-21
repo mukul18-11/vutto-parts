@@ -64,17 +64,20 @@ export async function adjustStock(input: z.input<typeof adjustSchema>): Promise<
   });
   const parsed = adjustSchema.safeParse(input);
   if (!parsed.success) return res as RpcResult<AdjustResult>;
-  const supabase = await createClient();
+  // The follow-up reads are optional enrichment: a failure keeps the RPC result as it is.
+  const supabase = await createClient().catch(() => null);
 
   if (!res.ok) {
-    if (res.code !== "STALE_COUNT") return res;
+    if (res.code !== "STALE_COUNT" || !supabase) return res;
     // Who moved stock since the screen loaded (reads under RLS; the detail stays if this fails).
-    const { data } = await supabase.rpc("stock_ledger", {
-      p_workshop_id: parsed.data.workshop_id,
-      p_part_id: parsed.data.part_id,
-      p_bin_id: parsed.data.bin_id,
-      p_limit: 10,
-    });
+    const { data } = await supabase
+      .rpc("stock_ledger", {
+        p_workshop_id: parsed.data.workshop_id,
+        p_part_id: parsed.data.part_id,
+        p_bin_id: parsed.data.bin_id,
+        p_limit: 10,
+      })
+      .then((r) => r, () => ({ data: null }));
     const all = data ?? [];
     const since = all.filter((m) => Date.parse(m.created_at) > Date.parse(parsed.data.loaded_at));
     // Clock skew between app and database: fall back to the latest moves.
@@ -90,8 +93,12 @@ export async function adjustStock(input: z.input<typeof adjustSchema>): Promise<
 
   const data = res.data as unknown as { delta: number; on_hand: number; released: string[]; allocated: AdjustResult["allocated"] };
   let released_bikes: BikeRef[] = data.released.map((code) => ({ card_code: code, reg_no: null }));
-  if (data.released.length > 0) {
-    const { data: cards } = await supabase.from("job_cards").select("code, bikes(reg_no)").in("code", data.released);
+  if (data.released.length > 0 && supabase) {
+    const { data: cards } = await supabase
+      .from("job_cards")
+      .select("code, bikes(reg_no)")
+      .in("code", data.released)
+      .then((r) => r, () => ({ data: null }));
     const reg = new Map((cards ?? []).map((c) => [c.code, (c.bikes as { reg_no: string } | null)?.reg_no ?? null]));
     released_bikes = data.released.map((code) => ({ card_code: code, reg_no: reg.get(code) ?? null }));
   }

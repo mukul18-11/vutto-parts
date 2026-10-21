@@ -76,6 +76,7 @@ const enums: EnumLabels = {
 export const en = {
   common: {
     appName: "Vutto Parts",
+    scrollHint: "Scroll sideways for more columns →",
     signOut: "Sign out",
     cancel: "Cancel",
     retry: "Retry",
@@ -98,9 +99,9 @@ export const en = {
     submit: "Sign in",
     wrongPassword: "Wrong email or password.",
     demoHeading: "Demo logins",
-    demoNote: "Shared demo accounts. Credentials are restored automatically every 30 minutes.",
+    demoNote: "Shared demo accounts. Credentials are restored automatically every 2 hours.",
     demoPasswordChanged:
-      "Another visitor changed this demo password. It is restored within 30 minutes; try another role meanwhile.",
+      "Another visitor changed this demo password. It is restored within 2 hours; try another role meanwhile.",
     signInAs: "Sign in as {name}",
     failed: "Sign-in failed. Try again.",
     demo: {
@@ -188,6 +189,8 @@ export const en = {
     body: "Nothing was lost. Try again.",
     bodyRef: "Nothing was lost. Try again, or quote ref {ref} if it keeps happening.",
     retry: "Try again",
+    unavailable: "Demo database waking up or unavailable – retry in a minute",
+    unavailableBody: "Nothing was lost. The free demo database sleeps when idle and takes up to a minute to wake.",
   },
   form: {
     reason: "Reason",
@@ -969,6 +972,7 @@ export const en = {
     price: "Unit price",
     reference: "Reference",
     premium: "Premium",
+    referenceLine: "ref {reference} · {premium}",
     reason: "Reason",
     by: "Bought by",
     noReference: "–",
@@ -1019,7 +1023,8 @@ export const en = {
     deadStockSkus: "{n} SKUs",
     seeDeadStock: "See dead stock",
     wrongFit: "Wrong-fit rate",
-    wrongFitDef: "Units returned as wrong fitment ÷ units issued in the period.",
+    wrongFitDef: "Units returned as wrong fitment ÷ units issued. Pre-ordering does not change fitment, so this is one figure, not before vs after.",
+    wrongFitLast45: "Last 45 days ({from} – {to})",
     wrongFitQty: "{qty} of {issued} issued",
     seeReturns: "See returns",
     overduePos: "Overdue POs",

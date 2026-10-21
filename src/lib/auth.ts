@@ -1,35 +1,57 @@
 import "server-only";
 import { forbidden, redirect } from "next/navigation";
 import { cache } from "react";
-import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { canAccess, type Role, type RouteKey } from "@/lib/permissions";
 
 export type Workshop = { id: string; code: string; name: string };
 export type Profile = { user_id: string; full_name: string; role: Role; workshop_id: string | null };
 
+/** The verified JWT subject and email. Role and workshop come only from profiles. */
+export type SessionUser = { id: string; email: string | null };
+
 export type SessionContext =
   | { user: null; profile: null; workshops: Workshop[] }
-  | { user: User; profile: null; workshops: Workshop[] }
-  | { user: User; profile: Profile; workshops: Workshop[] };
+  | { user: SessionUser; profile: null; workshops: Workshop[] }
+  | { user: SessionUser; profile: Profile; workshops: Workshop[] };
 
 /**
  * The signed-in user and their profile, read on every request (SPEC §2: role and workshop come
  * only from public.profiles). React cache() dedupes within one request only (layout + page);
  * nothing is kept between requests.
+ *
+ * getClaims() verifies the JWT signature locally against the project's JWKS when the project uses
+ * asymmetric signing keys (production does), so a page costs one round trip here instead of two.
+ * With a symmetric key (local Supabase) it falls back to a request to Auth. Server actions still
+ * call auth.getUser() before every write (src/lib/rpc.ts, SESSION_CHANGED).
  */
 export const getSessionContext = cache(async (): Promise<SessionContext> => {
   const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return { user: null, profile: null, workshops: [] };
+  const { data: auth } = await supabase.auth.getClaims();
+  const sub = auth?.claims.sub;
+  if (!sub) return { user: null, profile: null, workshops: [] };
 
   const [profileRes, workshopsRes] = await Promise.all([
-    supabase.from("profiles").select("user_id, full_name, role, workshop_id").eq("user_id", auth.user.id).maybeSingle(),
+    supabase.from("profiles").select("user_id, full_name, role, workshop_id").eq("user_id", sub).maybeSingle(),
     supabase.from("workshops").select("id, code, name").order("code", { ascending: false }),
   ]);
   if (profileRes.error) throw profileRes.error;
   if (workshopsRes.error) throw workshopsRes.error;
-  return { user: auth.user, profile: profileRes.data, workshops: workshopsRes.data };
+  const email = typeof auth.claims.email === "string" ? auth.claims.email : null;
+  return { user: { id: sub, email }, profile: profileRes.data, workshops: workshopsRes.data };
+});
+
+export type DemoMeta = { anchor_date: string | null; last_reset_at: string | null; last_reset_by: string | null };
+
+/**
+ * The demo_meta row (anchor date, last reset), shared by the layout and the metrics pages within
+ * one request so it is read once. Runs in parallel with getSessionContext.
+ */
+export const getDemoMeta = cache(async (): Promise<DemoMeta | null> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("demo_meta").select("anchor_date, last_reset_at, last_reset_by").maybeSingle();
+  if (error) throw error;
+  return data;
 });
 
 export const WORKSHOP_CODES = ["NCR", "JPR"] as const;
@@ -51,7 +73,7 @@ export function resolveWorkshop(profile: Profile, workshops: Workshop[], searchP
   return picked;
 }
 
-export type PageContext = { user: User; profile: Profile; workshop: Workshop; workshops: Workshop[] };
+export type PageContext = { user: SessionUser; profile: Profile; workshop: Workshop; workshops: Workshop[] };
 
 /**
  * Route guard at the top of every (app) page (layouts get no searchParams and do not re-render

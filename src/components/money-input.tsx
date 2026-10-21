@@ -9,7 +9,9 @@ type Props = {
   /** Called with integer paise, or null while the text is not a valid amount. */
   onChange: (paise: number | null, text: string) => void;
   defaultValue?: string;
-  label?: string;
+  /** Required: every input has a label (SPEC §14). hideLabel keeps it for screen readers only. */
+  label: string;
+  hideLabel?: boolean;
   name?: string;
   disabled?: boolean;
   invalid?: boolean;
@@ -17,7 +19,7 @@ type Props = {
 };
 
 /** Rupee amount typed as text and parsed with the shared parser (never floats, SPEC §13). */
-export function MoneyInput({ onChange, defaultValue = "", label, name, disabled, invalid, className }: Props) {
+export function MoneyInput({ onChange, defaultValue = "", label, hideLabel, name, disabled, invalid, className }: Props) {
   const t = useT();
   const id = useId();
   const [text, setText] = useState(defaultValue);
@@ -25,11 +27,9 @@ export function MoneyInput({ onChange, defaultValue = "", label, name, disabled,
 
   return (
     <div className={cn("flex flex-col gap-1", className)}>
-      {label && (
-        <label htmlFor={id} className="text-sm font-medium">
-          {label}
-        </label>
-      )}
+      <label htmlFor={id} className={hideLabel ? "sr-only" : "text-sm font-medium"}>
+        {label}
+      </label>
       <div className="flex h-12 items-center rounded-lg border border-input bg-background focus-within:ring-3 focus-within:ring-ring/50">
         <span className="pl-3 text-base text-muted-foreground">₹</span>
         <input

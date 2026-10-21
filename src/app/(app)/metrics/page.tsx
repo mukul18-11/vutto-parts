@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { TabLink } from "@/components/tab-link";
 import { Badge } from "@/components/ui/badge";
-import { requireRole, type SearchParams } from "@/lib/auth";
+import { getDemoMeta, requireRole, type SearchParams } from "@/lib/auth";
 import type { Database } from "@/lib/database.types";
 import type { TFunction } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
@@ -38,16 +38,14 @@ type Kpis = Database["public"]["Functions"]["kpis"]["Returns"][number];
  */
 export default async function MetricsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const sp = await searchParams;
-  const { profile, workshop, workshops } = await requireRole("/metrics", sp);
+  const [{ profile, workshop, workshops }, demoMeta] = await Promise.all([requireRole("/metrics", sp), getDemoMeta()]);
   const t = await getT();
   const supabase = await createClient();
   const isAdmin = profile.role === "admin";
   const combined = isCombined(profile.role, sp.scope);
   const scope = scopeParams(profile.role, workshop.code, combined);
 
-  const meta = await supabase.from("demo_meta").select("anchor_date").maybeSingle();
-  if (meta.error) throw meta.error;
-  const anchor = meta.data?.anchor_date ?? null;
+  const anchor = demoMeta?.anchor_date ?? null;
 
   const header = (
     <PageHeader
@@ -177,21 +175,19 @@ export default async function MetricsPage({ searchParams }: { searchParams: Prom
           />
         </MetricCard>
 
+        {/* One figure: pre-ordering changes waiting, not fitment, so before vs after would only
+            show noise. The last 45 days are the "after" period (days −45..−1). */}
         <MetricCard
           title={t("metrics.wrongFit")}
           definition={t("metrics.wrongFitDef")}
           testId="wrong-fit"
-          links={PERIOD_KEYS.map((key) => ({ href: periodHref("/metrics/wrong-fit", key), label: `${t("metrics.seeReturns")} (${t(`metrics.${key}`)})` }))}
+          links={[{ href: periodHref("/metrics/wrong-fit", "after"), label: t("metrics.seeReturns") }]}
         >
-          <PeriodPair
-            t={t}
-            render={(key) => (
-              <>
-                <Big testId={`wrong-fit-${key}`}>{formatPct(k[key].wrong_fit_rate)}</Big>
-                <Small>{t("metrics.wrongFitQty", { qty: k[key].wrong_fit_qty, issued: k[key].issued_qty })}</Small>
-              </>
-            )}
-          />
+          <h3 className="text-sm font-semibold">
+            {t("metrics.wrongFitLast45", { from: formatDateOnly(periods.after.from), to: formatDateOnly(periods.after.to) })}
+          </h3>
+          <Big testId="wrong-fit-value">{formatPct(k.after.wrong_fit_rate)}</Big>
+          <Small>{t("metrics.wrongFitQty", { qty: k.after.wrong_fit_qty, issued: k.after.issued_qty })}</Small>
         </MetricCard>
 
         <MetricCard

@@ -20,7 +20,7 @@ export function WorkshopSwitcher({ workshops, defaultCode }: { workshops: Option
     <label className="flex items-center gap-2 text-sm">
       <span className="sr-only">{t("header.workshop")}</span>
       <select
-        className="h-10 rounded-lg border border-input bg-background px-2 text-base"
+        className="h-12 rounded-lg border border-input bg-background px-2 text-base"
         value={value}
         disabled={pending}
         onChange={(e) => {

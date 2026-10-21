@@ -52,7 +52,7 @@ export default async function CataloguePage({ searchParams }: { searchParams: Pr
             href={link(`/catalogue?tab=${x}`)}
             aria-current={x === tab ? "page" : undefined}
             className={cn(
-              "flex h-10 items-center rounded-lg px-3 text-sm font-medium",
+              "flex h-12 items-center rounded-lg px-3 text-sm font-medium",
               x === tab ? "bg-primary text-primary-foreground" : "border hover:bg-muted",
             )}
           >
@@ -174,7 +174,7 @@ async function Parts({ ctx }: { ctx: Ctx }) {
         </ul>
       )}
       {more && (
-        <Button asChild variant="outline" className="h-11 self-end">
+        <Button asChild variant="outline" className="h-12 self-end">
           <Link href={link(`/catalogue?${next.toString()}`)}>{t("bikes.next")}</Link>
         </Button>
       )}
@@ -278,7 +278,7 @@ async function Bins({ ctx }: { ctx: Ctx }) {
       </p>
       <div className="flex flex-wrap gap-2">
         {admin && <BinDialog userId={userId} workshopId={workshop.id} workshopCode={workshop.code} />}
-        <Button asChild variant="outline" className="h-11">
+        <Button asChild variant="outline" className="h-12">
           <Link href={link("/bins/labels")}>{t("labels.printAll")}</Link>
         </Button>
       </div>
@@ -299,7 +299,7 @@ async function Bins({ ctx }: { ctx: Ctx }) {
                 )}
               </span>
               <span className="flex flex-wrap items-center gap-2">
-                <Button asChild variant="ghost" className="h-11">
+                <Button asChild variant="ghost" className="h-12">
                   <Link href={link(`/bins/labels?bin=${b.id}`)}>{t("labels.label")}</Link>
                 </Button>
                 {admin && b.kind === "normal" && <ActiveButton userId={userId} table="bins" id={b.id} isActive={b.is_active} />}

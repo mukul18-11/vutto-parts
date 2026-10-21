@@ -44,29 +44,22 @@ export default async function JobCardPage({
   searchParams: Promise<SearchParams>;
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
-  const { user, profile, workshops } = await requireRole("/job-cards", sp);
   if (!z.guid().safeParse(id).success) notFound();
-  const t = await getT();
-  const lang = await getLang();
   const supabase = await createClient();
 
-  const cardRes = await supabase
-    .from("job_cards")
-    .select(
-      "id, workshop_id, code, status, needed_by, needs_review_reason, bike_id, bike:bikes(id, reg_no, status, mfg_year, model_id, variant_id, model:vehicle_models(make, model), variant:model_variants(name))",
-    )
-    .eq("id", id)
-    .maybeSingle();
-  if (cardRes.error) throw cardRes.error;
-  const row = cardRes.data;
-  if (!row || !row.bike) notFound();
-  const bike = row.bike;
-  const workshopCode = workshops.find((w) => w.id === row.workshop_id)?.code ?? "";
-  const link = (href: string) => withWs(href, profile.role, workshopCode);
-  const isDraft = row.status === "draft";
-  const isConfirmed = row.status === "confirmed";
-
-  const [linesRes, findingsRes, etaRes, historyRes, openRes] = await Promise.all([
+  // Two sequential round trips: everything keyed by the card id runs with the route guard (RLS
+  // scopes it; the results are dropped if the guard redirects), then the reads that depend on it.
+  const [{ user, profile, workshops }, t, lang, cardRes, linesRes, findingsRes, etaRes, historyRes] = await Promise.all([
+    requireRole("/job-cards", sp),
+    getT(),
+    getLang(),
+    supabase
+      .from("job_cards")
+      .select(
+        "id, workshop_id, code, status, needed_by, needs_review_reason, bike_id, bike:bikes(id, reg_no, status, mfg_year, model_id, variant_id, model:vehicle_models(make, model), variant:model_variants(name))",
+      )
+      .eq("id", id)
+      .maybeSingle(),
     supabase
       .from("job_card_lines")
       .select(
@@ -83,23 +76,32 @@ export default async function JobCardPage({
       .order("id"),
     supabase.from("v_line_eta").select("line_id, eta_status, po_code, expected_on, is_overdue").eq("job_card_id", id),
     supabase.rpc("job_card_history", { p_card_id: id }),
-    row.status === "cancelled"
-      ? supabase.from("job_cards").select("id").eq("bike_id", row.bike_id).in("status", ["draft", "confirmed"]).maybeSingle()
-      : Promise.resolve({ data: null, error: null }),
   ]);
-  for (const res of [linesRes, findingsRes, etaRes, historyRes, openRes]) if (res.error) throw res.error;
+  for (const res of [cardRes, linesRes, findingsRes, etaRes, historyRes]) if (res.error) throw res.error;
+  const row = cardRes.data;
+  if (!row || !row.bike) notFound();
+  const bike = row.bike;
+  const workshopCode = workshops.find((w) => w.id === row.workshop_id)?.code ?? "";
+  const link = (href: string) => withWs(href, profile.role, workshopCode);
+  const isDraft = row.status === "draft";
+  const isConfirmed = row.status === "confirmed";
+
   const lines = linesRes.data ?? [];
   const live = lines.filter((l) => !l.cancelled_at);
   // View columns are typed nullable; these are never null for a row of the view.
   const findings = (findingsRes.data ?? []) as FindingRow[];
   const unresolved = findings.filter((f) => !f.job_card_line_id && !f.no_part_reason);
 
-  // Per-line and per-finding reads (SPEC §9): fit badge, "1 of N" candidates, finding candidates,
-  // and on confirmed cards the other lines holding a reservation of the same part.
+  // Per-line and per-finding reads (SPEC §9): fit badge, "1 of N" candidates, finding candidates;
+  // on confirmed cards the other lines holding a reservation of the same part and which of those
+  // cards are blocked themselves; on cancelled cards the bike's open card; on draft cards the
+  // finding types for "Edit findings" (active ones, plus any the bike already has so nothing is
+  // dropped silently) and the model's variants for "Set variant" (SPEC §5.2).
   const uncoveredParts = isConfirmed
     ? [...new Set(live.filter((l) => l.qty_required > l.qty_reserved + l.qty_issued - l.qty_returned).map((l) => l.part_id))]
     : [];
-  const [fits, lineCands, findingCands, holdersRes] = await Promise.all([
+  const none = Promise.resolve({ data: [], error: null });
+  const [fits, lineCands, findingCands, holdersRes, blockedRes, openRes, typesRes, variantsRes] = await Promise.all([
     Promise.all(live.map((l) => supabase.rpc("fit_badge", { p_line_id: l.id }))),
     Promise.all(live.map((l) => (isDraft ? supabase.rpc("line_candidates", { p_line_id: l.id }) : null))),
     Promise.all(unresolved.map((f) => (isDraft ? supabase.rpc("finding_candidates", { p_finding_id: f.id }) : null))),
@@ -112,26 +114,14 @@ export default async function JobCardPage({
           .neq("job_card_id", id)
           .gt("qty_reserved", 0)
           .order("id")
-      : Promise.resolve({ data: [], error: null }),
-  ]);
-  for (const res of [...fits, ...lineCands, ...findingCands, holdersRes]) if (res?.error) throw res.error;
-  const holderRows = holdersRes.data ?? [];
-  const blockedRes =
-    holderRows.length > 0
-      ? await supabase
-          .from("v_blocked_bikes")
-          .select("job_card_id")
-          .in("job_card_id", [...new Set(holderRows.map((h) => h.job_card_id))])
-      : { data: [], error: null };
-  if (blockedRes.error) throw blockedRes.error;
-  const blockedCards = new Set((blockedRes.data ?? []).map((b) => b.job_card_id));
-
-  // Draft edits (SPEC §5.2): finding types for "Edit findings" (active ones, plus any the bike
-  // already has so nothing is dropped silently) and the model's variants for "Set variant".
-  const [typesRes, variantsRes] = await Promise.all([
-    isDraft
-      ? supabase.from("finding_types").select("id, code, label_en, label_hi, area, is_active").order("label_en")
-      : Promise.resolve({ data: [], error: null }),
+      : none,
+    uncoveredParts.length > 0
+      ? supabase.from("v_blocked_bikes").select("job_card_id").eq("workshop_id", row.workshop_id)
+      : none,
+    row.status === "cancelled"
+      ? supabase.from("job_cards").select("id").eq("bike_id", row.bike_id).in("status", ["draft", "confirmed"]).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    isDraft ? supabase.from("finding_types").select("id, code, label_en, label_hi, area, is_active").order("label_en") : none,
     isDraft && !bike.variant_id
       ? supabase
           .from("model_variants")
@@ -139,10 +129,13 @@ export default async function JobCardPage({
           .eq("model_id", bike.model_id)
           .order("year_from")
           .order("name")
-      : Promise.resolve({ data: [], error: null }),
+      : none,
   ]);
-  if (typesRes.error) throw typesRes.error;
-  if (variantsRes.error) throw variantsRes.error;
+  for (const res of [...fits, ...lineCands, ...findingCands, holdersRes, blockedRes, openRes, typesRes, variantsRes]) {
+    if (res?.error) throw res.error;
+  }
+  const holderRows = holdersRes.data ?? [];
+  const blockedCards = new Set((blockedRes.data ?? []).map((b) => b.job_card_id));
   const usedTypes = new Set(findings.map((f) => f.finding_type_id));
   const findingTypes = (typesRes.data ?? []).filter((ft) => ft.is_active || usedTypes.has(ft.id));
 

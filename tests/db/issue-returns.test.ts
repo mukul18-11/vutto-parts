@@ -1,7 +1,6 @@
 // Issue to job card, returns, the fit badge and log_app_error (SPEC §8.1, §8.2, §9.2, §9.3,
 // §11.1), acting as the demo users. Cards are made with create_bike + confirm_job_card.
-// No concurrency tests: the user dropped them for this prompt (prompt test 2 and SPEC §17's
-// "last unit issued by two store keepers" are not covered here).
+// SPEC §17's "last unit issued by two store keepers" is the one concurrency test here (P14).
 import type pg from "pg";
 import { v4 as uuidv4 } from "uuid";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -191,6 +190,32 @@ describe("issue_to_job_card (SPEC §8.1)", () => {
       [oilLine(a)],
     );
     expect(moves.n).toBe(1);
+  });
+
+  it("SPEC §17: two store keepers issuing the last unit at once make exactly one issue", async () => {
+    const a = await oilCard("DL3SAD0101", 1);
+    const b = await oilCard("DL3SAD0102", 1);
+    await arrive(a);
+    await arrive(b);
+    await stockIn(1); // as postgres: one free unit, no allocation ran, both bikes wait for it
+    // Two phones on the counter (separate clients and connections), each issuing to a different bike.
+    const otherPhone = await clientAs("ncr_store");
+
+    const [ra, rb] = await Promise.all([issue(oilLine(a), 1), issueAs(otherPhone, oilLine(b), ncr.normal, 1)]);
+
+    const results = [ra, rb];
+    const ok = results.filter((r) => r.error === null);
+    const refused = results.filter((r) => r.error !== null);
+    expect(ok).toHaveLength(1);
+    expect(refused).toHaveLength(1);
+    expectCode(refused[0], "INSUFFICIENT_RESERVATION");
+    expect(await onHand(ncr.normal)).toBe(0);
+    const moves = await one<{ n: number; qty: number }>(
+      `select count(*)::int as n, coalesce(sum(qty), 0)::int as qty from public.stock_moves
+       where move_type = 'issue' and job_card_line_id = any($1::uuid[])`,
+      [[oilLine(a), oilLine(b)]],
+    );
+    expect(moves).toEqual({ n: 1, qty: 1 });
   });
 
   it("test 3: refuses more than the line's reservation when the extra unit is another bike's", async () => {

@@ -69,7 +69,7 @@ export function BinPicker({ bins, workshopCode, value, onChange, suggested, labe
         <Button
           type="button"
           variant="secondary"
-          className="h-11 justify-start text-base"
+          className="h-12 justify-start text-base"
           disabled={disabled}
           onClick={() => pick(suggested)}
         >
@@ -95,7 +95,7 @@ export function BinPicker({ bins, workshopCode, value, onChange, suggested, labe
             <li key={b.id}>
               <button
                 type="button"
-                className="flex min-h-11 w-full items-center rounded-lg border px-3 text-left font-mono text-base hover:bg-muted"
+                className="flex min-h-12 w-full items-center rounded-lg border px-3 text-left font-mono text-base hover:bg-muted"
                 disabled={disabled}
                 onClick={() => pick(b)}
               >

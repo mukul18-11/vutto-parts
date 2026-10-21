@@ -59,7 +59,7 @@ export function FindingsChecklist({
             const label = lang === "hi" ? ft.label_hi : ft.label_en;
             return (
               <div key={ft.id} className="flex flex-col gap-2 border-b py-1 last:border-b-0">
-                <label className="flex min-h-11 items-center gap-3">
+                <label className="flex min-h-12 items-center gap-3">
                   <input
                     type="checkbox"
                     className="size-5 shrink-0"

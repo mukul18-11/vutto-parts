@@ -1,0 +1,57 @@
+name: demo-guard
+
+# Keeps the public demo usable (SPEC §16). Never runs on push or pull_request.
+# - Every 2 hours: check each demo login and repair only the broken ones (scripts/demo-guard.ts).
+#   SPEC §16 says every 30 minutes; the repo is private, so this runs every 2 hours to save
+#   Actions minutes (docs/DECISIONS.md). The login page says "every 2 hours" to match.
+# - Every 6 hours (00/06/12/18 UTC, the even hours the 2-hourly schedule skips): the same check,
+#   plus public.reseed_if_stale_service() through supabase-js with the secret key, and a curl of
+#   PROD_URL/api/health with --fail (keeps the free Supabase project awake; a failure emails you).
+# - workflow_dispatch: everything.
+on:
+  schedule:
+    - cron: "0 1-23/2 * * *"
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-guard
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+      PROD_URL: ${{ secrets.PROD_URL }}
+      FULL: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '0 */6 * * *' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Check and repair demo logins (and reseed if stale)
+        run: |
+          if [ "$FULL" = "true" ]; then
+            pnpm exec tsx scripts/demo-guard.ts --reseed
+          else
+            pnpm exec tsx scripts/demo-guard.ts
+          fi
+
+      - name: Health check
+        if: env.FULL == 'true'
+        run: curl --fail --silent --show-error --max-time 30 "$PROD_URL/api/health"

@@ -7,7 +7,7 @@ export async function SignOutButton({ className }: { className?: string }) {
   const t = await getT();
   return (
     <form action={signOut}>
-      <Button type="submit" variant="ghost" className={className ?? "h-10 px-3"}>
+      <Button type="submit" variant="ghost" className={className ?? "h-12 px-3"}>
         <LogOutIcon aria-hidden />
         {t("common.signOut")}
       </Button>

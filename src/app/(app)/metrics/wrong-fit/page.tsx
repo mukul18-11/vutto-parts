@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { TabLink } from "@/components/tab-link";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { requireRole, type SearchParams } from "@/lib/auth";
+import { getDemoMeta, requireRole, type SearchParams } from "@/lib/auth";
 import type { Database } from "@/lib/database.types";
 import { getT } from "@/lib/i18n/server";
 import { demoPeriods, formatPct, hrefWith, isCombined, PERIOD_KEYS, parsePeriod, scopeParams, workshopArg } from "@/lib/metrics";
@@ -21,16 +21,14 @@ const LIMIT = 500;
 /** The list behind the wrong-fit rate (SPEC §10): wrong_fit_returns() for one period, footer from kpis(). */
 export default async function WrongFitPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const sp = await searchParams;
-  const { profile, workshop, workshops } = await requireRole("/metrics/wrong-fit", sp);
+  const [{ profile, workshop, workshops }, demoMeta] = await Promise.all([requireRole("/metrics/wrong-fit", sp), getDemoMeta()]);
   const t = await getT();
   const supabase = await createClient();
   const combined = isCombined(profile.role, sp.scope);
   const scope = scopeParams(profile.role, workshop.code, combined);
   const periodKey = parsePeriod(sp.period);
 
-  const meta = await supabase.from("demo_meta").select("anchor_date").maybeSingle();
-  if (meta.error) throw meta.error;
-  const anchor = meta.data?.anchor_date ?? null;
+  const anchor = demoMeta?.anchor_date ?? null;
   const header = (
     <PageHeader
       title={t("pages.wrongFit")}
@@ -121,7 +119,7 @@ export default async function WrongFitPage({ searchParams }: { searchParams: Pro
                       <span className="block">{r.part_name}</span>
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{`${r.qty} ${t(`enums.uom.${r.uom as Uom}`)}`}</TableCell>
-                    <TableCell className="max-w-64 break-words">{r.note}</TableCell>
+                    <TableCell className="min-w-48 max-w-64 whitespace-normal break-words">{r.note}</TableCell>
                     <TableCell>{r.user_name}</TableCell>
                   </TableRow>
                 );

@@ -1,6 +1,8 @@
 // Reference data for the demo seed, transcribed exactly from docs/seed-catalogue.md (§5.1–§5.9).
 // Pure data plus pure derivations (fit-list expansion, suppliers, auto-pick, demand, bins).
 // No Date, Math.random or Intl (SPEC §15). Never imported from src/.
+// Prices go through the shared rupee parser (CLAUDE.md rule 3); its formatter is never called here.
+import { rupeesToPaise } from "../../src/lib/money";
 
 export type Segment = "motorcycle" | "scooter" | "moped";
 export type Brake = "drum" | "disc";
@@ -464,6 +466,12 @@ function makePart(p: Omit<Part, "nameHi" | "aliases">): Part {
   return { ...p, nameHi: hindiName(p.partType, p.name), aliases: [...HINDI[p.partType].aliases] };
 }
 
+function catalogPaise(sku: string, rupees: string): number {
+  const paise = rupeesToPaise(rupees);
+  if (paise === null) throw new Error(`Bad price ${JSON.stringify(rupees)} for ${sku}`);
+  return paise;
+}
+
 function explicitParts(block: string, category: Category): Part[] {
   const out: Part[] = [];
   for (const [sku, name, partType, uom, price, fits, extras = ""] of rows(block)) {
@@ -485,7 +493,7 @@ function explicitParts(block: string, category: Category): Part[] {
         category,
         partType,
         uom: uom as Uom,
-        pricePaise: Number(base) * 100,
+        pricePaise: catalogPaise(sku, base),
         isUniversal: universal,
         isAftermarket: false,
         fits: fitList,
@@ -501,7 +509,7 @@ function explicitParts(block: string, category: Category): Part[] {
           category,
           partType,
           uom: uom as Uom,
-          pricePaise: Number(alt.replace("alt", "").trim()) * 100,
+          pricePaise: catalogPaise(`${sku}-AM`, alt.replace("alt", "").trim()),
           isUniversal: false,
           isAftermarket: true,
           fits: fitList.map((f) => ({ ...f })),

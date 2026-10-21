@@ -1,4 +1,5 @@
 // Login smoke (Prompt 9): each demo button lands on the role's home page with the shell around it.
+import { readdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { NO_PROFILE_USER } from "../db/sessions";
 
@@ -86,4 +87,17 @@ test("signing out returns to /login and protects pages again", async ({ page }) 
   await expect(page).toHaveURL(/\/login$/);
   await page.goto("/store");
   await expect(page).toHaveURL(/\/login\?next=%2Fstore$/);
+});
+
+test("/api/health reports the newest migration and the commit (SPEC §16)", async ({ request }) => {
+  const newest = readdirSync("supabase/migrations")
+    .map((f) => f.split("_")[0])
+    .sort()
+    .at(-1);
+  const res = await request.get("/api/health");
+  expect(res.status()).toBe(200);
+  expect(res.headers()["cache-control"]).toContain("no-store");
+  const body = await res.json();
+  expect(body).toEqual({ ok: true, schema_version: newest, commit: expect.any(String) });
+  expect(body.schema_version).toMatch(/^\d{14}$/);
 });

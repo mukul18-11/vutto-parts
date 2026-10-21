@@ -78,7 +78,7 @@ export function PartPicker({ workshopId, variantId, partType, onPick, selectedId
         )}
       </Field>
       {partType && (
-        <label className="flex min-h-11 items-center gap-2 text-sm">
+        <label className="flex min-h-12 items-center gap-2 text-sm">
           <input
             type="checkbox"
             className="size-5"

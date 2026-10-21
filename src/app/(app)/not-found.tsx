@@ -1,7 +1,7 @@
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
+import { getDemoMeta } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
-import { createClient } from "@/lib/supabase/server";
 import { formatIST } from "@/lib/time";
 
 /**
@@ -10,8 +10,8 @@ import { formatIST } from "@/lib/time";
  */
 export default async function NotFound() {
   const t = await getT();
-  const supabase = await createClient();
-  const { data: meta } = await supabase.from("demo_meta").select("last_reset_at").maybeSingle();
+  // Usually already read by the layout in this request (React cache); optional here.
+  const meta = await getDemoMeta().catch(() => null);
   return (
     <>
       <PageHeader title={t("common.notFoundTitle")} />

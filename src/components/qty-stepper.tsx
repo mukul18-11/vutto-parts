@@ -18,7 +18,9 @@ type Props = {
   min?: number;
   max?: number;
   uom: Uom;
-  label?: string;
+  /** Required: every input has a label (SPEC §14). hideLabel keeps it for screen readers only. */
+  label: string;
+  hideLabel?: boolean;
   name?: string;
   disabled?: boolean;
   className?: string;
@@ -38,6 +40,7 @@ export function QtyStepper({
   max = 999,
   uom,
   label,
+  hideLabel,
   name,
   disabled,
   className,
@@ -48,11 +51,9 @@ export function QtyStepper({
 
   return (
     <div className={cn("flex flex-col gap-1", className)}>
-      {label && (
-        <label htmlFor={id} className="text-sm font-medium">
-          {label}
-        </label>
-      )}
+      <label htmlFor={id} className={hideLabel ? "sr-only" : "text-sm font-medium"}>
+        {label}
+      </label>
       <div className="flex items-center gap-2">
         <Button
           type="button"

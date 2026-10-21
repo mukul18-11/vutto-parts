@@ -9,7 +9,7 @@ export async function Pager({ page, pages, hrefFor }: { page: number; pages: num
   return (
     <nav className="mt-3 flex items-center justify-between gap-2" aria-label={t("metrics.pageOf", { page, pages })}>
       {page > 1 ? (
-        <Button asChild variant="outline" className="h-11">
+        <Button asChild variant="outline" className="h-12">
           <Link href={hrefFor(page - 1)}>{t("metrics.prev")}</Link>
         </Button>
       ) : (
@@ -17,7 +17,7 @@ export async function Pager({ page, pages, hrefFor }: { page: number; pages: num
       )}
       <span className="text-sm text-muted-foreground">{t("metrics.pageOf", { page, pages })}</span>
       {page < pages ? (
-        <Button asChild variant="outline" className="h-11">
+        <Button asChild variant="outline" className="h-12">
           <Link href={hrefFor(page + 1)}>{t("metrics.next")}</Link>
         </Button>
       ) : (

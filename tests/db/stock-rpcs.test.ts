@@ -1,5 +1,6 @@
 // Stock RPCs (SPEC §8.4, §11.1) and search_parts (SPEC §14), acting as the demo users.
-// No reservations exist here; the reservation cases are in Prompt 4 test 13.
+// No reservations exist here; the reservation cases are in Prompt 4 test 13. SPEC §17's
+// "double-submit with the same request_id" runs here as a concurrent pair (P14).
 import type pg from "pg";
 import { v4 as uuidv4 } from "uuid";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -146,6 +147,20 @@ describe("idempotency", () => {
     const first = expectOk(await rpc(ncrStore, "putaway", { p_request_id: id, ...putawayArgs(2) }));
     const second = expectOk(await rpc(ncrStore, "putaway", { p_request_id: id, ...putawayArgs(2) }));
     expect(second).toEqual(first);
+    expect(await moveCount()).toBe(before + 1);
+    expect(await onHand(ncr.rcv)).toBe(3);
+  });
+
+  it("SPEC §17: a concurrent double submit with the same request_id posts one move and both get its result", async () => {
+    const id = uuidv4();
+    const before = await moveCount();
+    // A double tap that reaches the server twice at once (two connections, same user and request_id).
+    const otherTab = await clientAs("ncr_store");
+    const [a, b] = await Promise.all([
+      rpc(ncrStore, "putaway", { p_request_id: id, ...putawayArgs(2) }),
+      rpc(otherTab, "putaway", { p_request_id: id, ...putawayArgs(2) }),
+    ]);
+    expect(expectOk(b)).toEqual(expectOk(a));
     expect(await moveCount()).toBe(before + 1);
     expect(await onHand(ncr.rcv)).toBe(3);
   });

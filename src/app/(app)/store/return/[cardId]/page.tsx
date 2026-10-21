@@ -27,24 +27,19 @@ export default async function ReturnPage({
   searchParams: Promise<SearchParams>;
 }) {
   const [{ cardId }, sp] = await Promise.all([params, searchParams]);
-  const { user, profile, workshop } = await requireRole("/store/return", sp);
   if (!z.guid().safeParse(cardId).success) notFound();
-  const t = await getT();
   const supabase = await createClient();
-  const link = (href: string) => withWs(href, profile.role, workshop.code);
 
-  const cardRes = await supabase
-    .from("job_cards")
-    .select("id, code, status, bike:bikes(reg_no, status, mfg_year, model:vehicle_models(make, model), variant:model_variants(name))")
-    .eq("id", cardId)
-    .eq("workshop_id", workshop.id)
-    .maybeSingle();
-  if (cardRes.error) throw cardRes.error;
-  const card = cardRes.data;
-  if (!card || !card.bike) notFound();
-  const bike = card.bike;
-
-  const [linesRes, binsRes, qrnRes] = await Promise.all([
+  // Two sequential round trips: the card and its lines run with the route guard (RLS scopes them;
+  // the workshop is checked once the guard resolves), then bins and balances.
+  const [{ user, profile, workshop }, t, cardRes, linesRes] = await Promise.all([
+    requireRole("/store/return", sp),
+    getT(),
+    supabase
+      .from("job_cards")
+      .select("id, workshop_id, code, status, bike:bikes(reg_no, status, mfg_year, model:vehicle_models(make, model), variant:model_variants(name))")
+      .eq("id", cardId)
+      .maybeSingle(),
     supabase
       .from("job_card_lines")
       .select("id, part_id, qty_issued, qty_returned, part:parts(sku, name, name_hi, uom)")
@@ -52,17 +47,22 @@ export default async function ReturnPage({
       .is("cancelled_at", null)
       .order("created_at")
       .order("id"),
-    supabase.from("bins").select("id, code").eq("workshop_id", workshop.id).eq("kind", "normal").eq("is_active", true).order("code"),
-    supabase.from("bins").select("code").eq("workshop_id", workshop.id).eq("kind", "quarantine").maybeSingle(),
   ]);
-  for (const r of [linesRes, binsRes, qrnRes]) if (r.error) throw r.error;
+  if (cardRes.error) throw cardRes.error;
+  if (linesRes.error) throw linesRes.error;
+  const link = (href: string) => withWs(href, profile.role, workshop.code);
+  const card = cardRes.data;
+  if (!card || !card.bike || card.workshop_id !== workshop.id) notFound();
+  const bike = card.bike;
   const out = (linesRes.data ?? []).filter((l) => l.qty_issued - l.qty_returned > 0);
 
   // Suggested bin per part: the normal bin already holding the most of it (as for putaway).
   const partIds = [...new Set(out.map((l) => l.part_id))];
-  const balRes =
+  const [binsRes, qrnRes, balRes] = await Promise.all([
+    supabase.from("bins").select("id, code").eq("workshop_id", workshop.id).eq("kind", "normal").eq("is_active", true).order("code"),
+    supabase.from("bins").select("code").eq("workshop_id", workshop.id).eq("kind", "quarantine").maybeSingle(),
     partIds.length > 0
-      ? await supabase
+      ? supabase
           .from("stock_balances")
           .select("part_id, on_hand, bin:bins!inner(id, code, kind)")
           .eq("workshop_id", workshop.id)
@@ -70,8 +70,9 @@ export default async function ReturnPage({
           .eq("bin.kind", "normal")
           .gt("on_hand", 0)
           .order("on_hand", { ascending: false })
-      : { data: [], error: null };
-  if (balRes.error) throw balRes.error;
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  for (const r of [binsRes, qrnRes, balRes]) if (r.error) throw r.error;
   const suggested = new Map<string, { id: string; code: string }>();
   for (const b of balRes.data ?? []) {
     const bin = b.bin as { id: string; code: string };

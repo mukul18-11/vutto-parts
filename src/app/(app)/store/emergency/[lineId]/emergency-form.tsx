@@ -103,7 +103,7 @@ export function EmergencyForm({
       <div className="flex flex-col gap-2">
         <QtyStepper label={t("emergency.qty")} value={qty} min={1} max={cap} onChange={setQty} uom={part.uom} testId="emergency-qty" />
         {!override && qty >= cap && (
-          <Button type="button" variant="ghost" className="h-11 justify-start text-base" onClick={() => setOverride(true)} data-testid="more-than-needed">
+          <Button type="button" variant="ghost" className="h-12 justify-start text-base" onClick={() => setOverride(true)} data-testid="more-than-needed">
             {t("emergency.moreThanNeeded")}
           </Button>
         )}

@@ -262,7 +262,7 @@ export function PartDialog({ userId, part, suppliers }: { userId: string; part?:
           </NativeSelect>
         )}
       </Field>
-      <label className="flex min-h-11 items-center gap-2">
+      <label className="flex min-h-12 items-center gap-2">
         <input type="checkbox" className="size-5" checked={universal} onChange={(e) => setUniversal(e.target.checked)} />
         {t("catalogue.universal")}
       </label>

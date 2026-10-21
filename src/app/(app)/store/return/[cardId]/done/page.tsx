@@ -31,23 +31,26 @@ export default async function ReturnDonePage({
   searchParams: Promise<SearchParams>;
 }) {
   const [{ cardId }, sp] = await Promise.all([params, searchParams]);
-  const { user, profile, workshop } = await requireRole("/store/return", sp);
   const moveId = z.coerce.number().int().positive().safeParse(sp.move);
   if (!z.guid().safeParse(cardId).success || !moveId.success) notFound();
-  const t = await getT();
   const supabase = await createClient();
-  const link = (href: string) => withWs(href, profile.role, workshop.code);
 
-  const moveRes = await supabase
-    .from("stock_moves")
-    .select("id, move_type, qty, to_bin_id, job_card_line_id, part_id, reason")
-    .eq("id", moveId.data)
-    .eq("workshop_id", workshop.id)
-    .in("move_type", ["return_to_stock", "return_to_quarantine"])
-    .maybeSingle();
+  // Two sequential round trips: the move runs with the route guard (RLS scopes it; the workshop
+  // is checked once the guard resolves), then the line, bins and balance it points to.
+  const [{ user, profile, workshop }, t, moveRes] = await Promise.all([
+    requireRole("/store/return", sp),
+    getT(),
+    supabase
+      .from("stock_moves")
+      .select("id, workshop_id, move_type, qty, to_bin_id, job_card_line_id, part_id, reason")
+      .eq("id", moveId.data)
+      .in("move_type", ["return_to_stock", "return_to_quarantine"])
+      .maybeSingle(),
+  ]);
   if (moveRes.error) throw moveRes.error;
+  const link = (href: string) => withWs(href, profile.role, workshop.code);
   const move = moveRes.data;
-  if (!move || !move.job_card_line_id || !move.to_bin_id || !isReturnReason(move.reason)) notFound();
+  if (!move || move.workshop_id !== workshop.id || !move.job_card_line_id || !move.to_bin_id || !isReturnReason(move.reason)) notFound();
 
   const [lineRes, binRes, balRes, binsRes] = await Promise.all([
     supabase

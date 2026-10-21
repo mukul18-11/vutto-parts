@@ -27,23 +27,26 @@ export default async function IssueDonePage({
   searchParams: Promise<SearchParams>;
 }) {
   const [{ cardId }, sp] = await Promise.all([params, searchParams]);
-  const { profile, workshop } = await requireRole("/store/issue", sp);
   const moveId = z.coerce.number().int().positive().safeParse(sp.move);
   if (!z.guid().safeParse(cardId).success || !moveId.success) notFound();
-  const t = await getT();
   const supabase = await createClient();
-  const link = (href: string) => withWs(href, profile.role, workshop.code);
 
-  const moveRes = await supabase
-    .from("stock_moves")
-    .select("id, move_type, qty, from_bin_id, job_card_line_id, part_id")
-    .eq("id", moveId.data)
-    .eq("workshop_id", workshop.id)
-    .eq("move_type", "issue")
-    .maybeSingle();
+  // Two sequential round trips: the move runs with the route guard (RLS scopes it; the workshop
+  // is checked once the guard resolves), then the line, bin and balance it points to.
+  const [{ profile, workshop }, t, moveRes] = await Promise.all([
+    requireRole("/store/issue", sp),
+    getT(),
+    supabase
+      .from("stock_moves")
+      .select("id, workshop_id, move_type, qty, from_bin_id, job_card_line_id, part_id")
+      .eq("id", moveId.data)
+      .eq("move_type", "issue")
+      .maybeSingle(),
+  ]);
   if (moveRes.error) throw moveRes.error;
+  const link = (href: string) => withWs(href, profile.role, workshop.code);
   const move = moveRes.data;
-  if (!move || !move.job_card_line_id || !move.from_bin_id) notFound();
+  if (!move || move.workshop_id !== workshop.id || !move.job_card_line_id || !move.from_bin_id) notFound();
 
   const [lineRes, binRes, balRes] = await Promise.all([
     supabase

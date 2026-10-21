@@ -4,6 +4,7 @@ import { z } from "zod";
 import { AsOf } from "@/components/as-of";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
+import { TableScroll } from "@/components/table-scroll";
 import { StatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -86,7 +87,9 @@ export default async function EmergencyBuysPage({ searchParams }: { searchParams
               ? t("emergencyList.periodIntro", { from: formatDateOnly(period.from), to: formatDateOnly(period.to), n: LIMIT })
               : t("emergencyList.intro", { n: LIMIT })}
           </p>
-          <div className="overflow-x-auto rounded-xl border">
+          {/* Eight columns that wrap, so the table fits a laptop; on a phone it scrolls sideways
+              with a visible hint. Reference price and premium sit under the price paid. */}
+          <TableScroll testId="emergency-buys-scroll">
             <Table data-testid="emergency-buys">
               <TableHeader>
                 <TableRow>
@@ -96,8 +99,6 @@ export default async function EmergencyBuysPage({ searchParams }: { searchParams
                   <TableHead>{t("emergencyList.vendor")}</TableHead>
                   <TableHead className="text-right">{t("emergencyList.qty")}</TableHead>
                   <TableHead className="text-right">{t("emergencyList.price")}</TableHead>
-                  <TableHead className="text-right">{t("emergencyList.reference")}</TableHead>
-                  <TableHead className="text-right">{t("emergencyList.premium")}</TableHead>
                   <TableHead>{t("emergencyList.reason")}</TableHead>
                   <TableHead>{t("emergencyList.by")}</TableHead>
                 </TableRow>
@@ -107,12 +108,13 @@ export default async function EmergencyBuysPage({ searchParams }: { searchParams
                   const price = Number(r.unit_price_paise);
                   const ref = r.reference_price_paise === null ? null : Number(r.reference_price_paise);
                   const pct = premiumPercent(price, ref);
+                  const premium = pct === null ? t("emergencyList.noReference") : `${pct > 0 ? "+" : ""}${pct}%`;
                   return (
                     <TableRow key={r.id} data-testid={`buy-${r.id}`}>
-                      <TableCell className="whitespace-nowrap">
-                        {r.created_at ? formatIST(r.created_at) : ""}
+                      <TableCell>
+                        <span className="block whitespace-nowrap">{r.created_at ? formatIST(r.created_at) : ""}</span>
                         {r.is_simulated && (
-                          <Badge variant="outline" className="ml-1">
+                          <Badge variant="outline" className="mt-1">
                             {t("common.simulated")}
                           </Badge>
                         )}
@@ -121,30 +123,33 @@ export default async function EmergencyBuysPage({ searchParams }: { searchParams
                         <span className="font-mono">{r.reg_no}</span>
                         <span className="block font-mono text-xs text-muted-foreground">{r.card_code}</span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-40 whitespace-normal">
                         <span className="font-mono text-xs">{r.sku}</span>
                         <span className="block">{r.part_name}</span>
                       </TableCell>
-                      <TableCell>{r.vendor_name}</TableCell>
+                      <TableCell className="min-w-28 whitespace-normal">{r.vendor_name}</TableCell>
                       <TableCell className="text-right tabular-nums">{`${r.qty} ${t(`enums.uom.${r.uom as Enums["uom"]}`)}`}</TableCell>
-                      <TableCell className="text-right tabular-nums">{formatINR(price)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{ref === null ? t("emergencyList.noReference") : formatINR(ref)}</TableCell>
-                      <TableCell
-                        className={cn("text-right tabular-nums", isHighPremium(price, ref) && "font-semibold text-red-700 dark:text-red-400")}
-                        data-testid="buy-premium"
-                      >
-                        {pct === null ? t("emergencyList.noReference") : `${pct > 0 ? "+" : ""}${pct}%`}
+                      <TableCell className="text-right tabular-nums">
+                        <span className="block">{formatINR(price)}</span>
+                        <span
+                          className={cn("block text-xs text-muted-foreground", isHighPremium(price, ref) && "font-semibold text-red-700 dark:text-red-400")}
+                          data-testid="buy-premium"
+                        >
+                          {ref === null
+                            ? t("emergencyList.noReference")
+                            : t("emergencyList.referenceLine", { reference: formatINR(ref), premium })}
+                        </span>
                       </TableCell>
                       <TableCell>
                         {r.reason && <StatusBadge enum="emergency_reason" value={r.reason as Enums["emergency_reason"]} />}
                       </TableCell>
-                      <TableCell>{r.bought_by_name}</TableCell>
+                      <TableCell className="min-w-24 whitespace-normal">{r.bought_by_name}</TableCell>
                     </TableRow>
                   );
                 })}
               </TableBody>
             </Table>
-          </div>
+          </TableScroll>
         </>
       )}
       {period && spend !== undefined && (

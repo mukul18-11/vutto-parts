@@ -23,7 +23,7 @@ export function NavLinks({ items, keepWorkshop }: { items: NavItem[]; keepWorksh
             href={`${item.href}${suffix}`}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex h-10 items-center rounded-lg px-3 text-sm font-medium whitespace-nowrap",
+              "flex h-12 items-center rounded-lg px-3 text-sm font-medium whitespace-nowrap",
               active ? "bg-primary text-primary-foreground" : "hover:bg-muted",
             )}
           >

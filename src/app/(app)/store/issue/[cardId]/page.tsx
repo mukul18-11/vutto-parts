@@ -29,37 +29,40 @@ export default async function IssuePage({
   searchParams: Promise<SearchParams>;
 }) {
   const [{ cardId }, sp] = await Promise.all([params, searchParams]);
-  const { user, profile, workshop } = await requireRole("/store/issue", sp);
   if (!z.guid().safeParse(cardId).success) notFound();
-  const t = await getT();
   const supabase = await createClient();
-  const link = (href: string) => withWs(href, profile.role, workshop.code);
 
-  const cardRes = await supabase
-    .from("job_cards")
-    .select(
-      "id, code, status, bike:bikes(reg_no, status, mfg_year, variant_id, model:vehicle_models(make, model), variant:model_variants(name))",
-    )
-    .eq("id", cardId)
-    .eq("workshop_id", workshop.id)
-    .maybeSingle();
+  // Two sequential round trips: the card and its lines run with the route guard (RLS scopes them;
+  // the workshop is checked once the guard resolves), then the reads that depend on them.
+  const [{ user, profile, workshop }, t, cardRes, linesRes] = await Promise.all([
+    requireRole("/store/issue", sp),
+    getT(),
+    supabase
+      .from("job_cards")
+      .select(
+        "id, workshop_id, code, status, bike:bikes(reg_no, status, mfg_year, variant_id, model:vehicle_models(make, model), variant:model_variants(name))",
+      )
+      .eq("id", cardId)
+      .maybeSingle(),
+    supabase
+      .from("job_card_lines")
+      .select("id, part_id, qty_required, qty_reserved, qty_issued, qty_returned, status, part:parts(sku, name, name_hi, uom, is_universal)")
+      .eq("job_card_id", cardId)
+      .is("cancelled_at", null)
+      .order("created_at")
+      .order("id"),
+  ]);
   if (cardRes.error) throw cardRes.error;
+  if (linesRes.error) throw linesRes.error;
+  const link = (href: string) => withWs(href, profile.role, workshop.code);
   const card = cardRes.data;
-  if (!card || !card.bike) notFound();
+  if (!card || !card.bike || card.workshop_id !== workshop.id) notFound();
   const bike = card.bike;
   const label = bikeLabel(
     { make: bike.model?.make ?? null, model: bike.model?.model ?? null, variant_name: bike.variant?.name ?? null, mfg_year: bike.mfg_year },
     t,
   );
 
-  const linesRes = await supabase
-    .from("job_card_lines")
-    .select("id, part_id, qty_required, qty_reserved, qty_issued, qty_returned, status, part:parts(sku, name, name_hi, uom, is_universal)")
-    .eq("job_card_id", cardId)
-    .is("cancelled_at", null)
-    .order("created_at")
-    .order("id");
-  if (linesRes.error) throw linesRes.error;
   const lines = linesRes.data ?? [];
   const partIds = [...new Set(lines.map((l) => l.part_id))];
 

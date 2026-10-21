@@ -17,7 +17,7 @@ export function LanguageToggle() {
     <Button
       type="button"
       variant="outline"
-      className="h-10 px-3"
+      className="h-12 px-3"
       disabled={pending}
       aria-label={t("header.switchLanguageLabel")}
       lang={lang === "en" ? "hi" : "en"}

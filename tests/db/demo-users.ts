@@ -66,6 +66,9 @@ export const DEMO_USERS: readonly DemoUser[] = [
 
 export type AuthTarget = { url: string; publishableKey: string };
 
+/** Optional progress reporting (scripts print it; tests pass nothing). Never gets a secret. */
+export type RepairLog = (message: string) => void;
+
 async function findUserByEmail(admin: SupabaseClient<Database>, email: string): Promise<User | undefined> {
   for (let page = 1; ; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
@@ -125,11 +128,13 @@ export async function ensureAuthUser(
   target: AuthTarget,
   user: { id: string; email: string },
   password: string,
+  log: RepairLog = () => {},
 ): Promise<Session> {
   const byEmail = await findUserByEmail(admin, user.email);
   if (byEmail && byEmail.id !== user.id) {
     const { error } = await admin.auth.admin.deleteUser(byEmail.id);
     if (error) throw error;
+    log(`${user.email}: removed a user with the wrong id`);
   }
 
   const { data: byId } = await admin.auth.admin.getUserById(user.id);
@@ -141,6 +146,7 @@ export async function ensureAuthUser(
       email_confirm: true,
     });
     if (error) throw error;
+    log(`${user.email}: created`);
   }
 
   const first = await trySignIn(target, user.email, password);
@@ -154,6 +160,7 @@ export async function ensureAuthUser(
     email_confirm: true,
   });
   if (error) throw error;
+  log(`${user.email}: password restored (sign-in failed: ${describeError(first.error)})`);
   const confirmed = await ensureEmailConfirmed(admin, user.id);
 
   const second = await trySignIn(target, user.email, password);
@@ -165,7 +172,11 @@ export async function ensureAuthUser(
 }
 
 /** Writes the profile only if it differs (uses the service_role client). */
-export async function ensureProfile(admin: SupabaseClient<Database>, user: DemoUser): Promise<void> {
+export async function ensureProfile(
+  admin: SupabaseClient<Database>,
+  user: DemoUser,
+  log: RepairLog = () => {},
+): Promise<void> {
   const { data, error } = await admin
     .from("profiles")
     .select("full_name, role, workshop_id")
@@ -182,6 +193,7 @@ export async function ensureProfile(admin: SupabaseClient<Database>, user: DemoU
     workshop_id: user.workshopId,
   });
   if (upsertError) throw upsertError;
+  log(`${user.email}: profile fixed`);
 }
 
 /** Ensures all five demo users and their profiles. Returns one live session per user. */
@@ -189,11 +201,12 @@ export async function ensureDemoUsers(
   admin: SupabaseClient<Database>,
   target: AuthTarget,
   password: string,
+  log: RepairLog = () => {},
 ): Promise<Record<DemoUserKey, Session>> {
   const sessions = {} as Record<DemoUserKey, Session>;
   for (const user of DEMO_USERS) {
-    sessions[user.key] = await ensureAuthUser(admin, target, user, password);
-    await ensureProfile(admin, user);
+    sessions[user.key] = await ensureAuthUser(admin, target, user, password, log);
+    await ensureProfile(admin, user, log);
   }
   return sessions;
 }

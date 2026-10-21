@@ -27,19 +27,34 @@ export default async function PoPage({
   searchParams: Promise<SearchParams>;
 }) {
   const [{ poId }, sp] = await Promise.all([params, searchParams]);
-  const { user, profile, workshop } = await requireRole("/purchasing", sp);
   if (!z.guid().safeParse(poId).success) notFound();
-  const t = await getT();
   const supabase = await createClient();
 
-  const poRes = await supabase
-    .from("v_po_list")
-    .select(
-      "id, workshop_id, code, status, supplier_id, supplier_name, supplier_phone, lead_time_days, sent_at, expected_on, cancel_reason, is_overdue, line_count, qty_accepted, open_qty, total_paise, missing_price_count",
-    )
-    .eq("id", poId)
-    .maybeSingle();
-  if (poRes.error) throw poRes.error;
+  // The PO, its lines and GRNs run with the route guard (RLS scopes them); only a draft needs a
+  // second round trip, for the reorder suggestions of its workshop.
+  const [{ user, profile, workshop }, t, poRes, linesRes, grnRes] = await Promise.all([
+    requireRole("/purchasing", sp),
+    getT(),
+    supabase
+      .from("v_po_list")
+      .select(
+        "id, workshop_id, code, status, supplier_id, supplier_name, supplier_phone, lead_time_days, sent_at, expected_on, cancel_reason, is_overdue, line_count, qty_accepted, open_qty, total_paise, missing_price_count",
+      )
+      .eq("id", poId)
+      .maybeSingle(),
+    supabase
+      .from("po_lines")
+      .select(
+        "id, part_id, qty_ordered, qty_accepted, qty_rejected, qty_cancelled, open_qty, unit_price_paise, source, parts(sku, name, name_hi, uom, oem_part_no)",
+      )
+      .eq("po_id", poId),
+    supabase
+      .from("v_grn_list")
+      .select("id, code, supplier_invoice_no, invoice_date, received_by_name, received_at, qty_received, qty_accepted, qty_rejected, accepted_value_paise")
+      .eq("po_id", poId)
+      .order("received_at", { ascending: false }),
+  ]);
+  for (const res of [poRes, linesRes, grnRes]) if (res.error) throw res.error;
   const po = poRes.data;
   // Admin sees every workshop; the page stays on the PO's own workshop.
   if (!po || (profile.role !== "admin" && po.workshop_id !== workshop.id)) notFound();
@@ -47,25 +62,10 @@ export default async function PoPage({
   const isDraft = status === "draft";
   const isOpen = status === "sent" || status === "partially_received";
 
-  const [linesRes, suggRes, grnRes] = await Promise.all([
-    supabase
-      .from("po_lines")
-      .select(
-        "id, part_id, qty_ordered, qty_accepted, qty_rejected, qty_cancelled, open_qty, unit_price_paise, source, parts(sku, name, name_hi, uom, oem_part_no)",
-      )
-      .eq("po_id", po.id as string),
-    isDraft
-      ? supabase.rpc("reorder_suggestions", { p_workshop_id: po.workshop_id as string })
-      : Promise.resolve({ data: [], error: null }),
-    isDraft
-      ? Promise.resolve({ data: [], error: null })
-      : supabase
-          .from("v_grn_list")
-          .select("id, code, supplier_invoice_no, invoice_date, received_by_name, received_at, qty_received, qty_accepted, qty_rejected, accepted_value_paise")
-          .eq("po_id", po.id as string)
-          .order("received_at", { ascending: false }),
-  ]);
-  for (const res of [linesRes, suggRes, grnRes]) if (res.error) throw res.error;
+  const suggRes = isDraft
+    ? await supabase.rpc("reorder_suggestions", { p_workshop_id: po.workshop_id as string })
+    : { data: [], error: null };
+  if (suggRes.error) throw suggRes.error;
 
   const lines = (linesRes.data ?? [])
     .map((l) => ({ ...l, part: l.parts as { sku: string; name: string; name_hi: string | null; uom: Uom; oem_part_no: string | null } }))

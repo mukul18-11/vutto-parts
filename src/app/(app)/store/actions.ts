@@ -67,10 +67,14 @@ export async function receiveGrn(input: z.input<typeof receiveSchema>): Promise<
   const codes = [...new Set(data.allocations.map((a) => a.card_code))];
   const card_ids: Record<string, string> = {};
   if (codes.length > 0) {
-    // Read only; a failure here just leaves the links out.
-    const supabase = await createClient();
-    const { data: cards } = await supabase.from("job_cards").select("id, code").in("code", codes);
-    for (const c of cards ?? []) card_ids[c.code] = c.id;
+    // Read only; a failure here just leaves the links out (the GRN is already posted).
+    try {
+      const supabase = await createClient();
+      const { data: cards } = await supabase.from("job_cards").select("id, code").in("code", codes);
+      for (const c of cards ?? []) card_ids[c.code] = c.id;
+    } catch {
+      // Links are optional.
+    }
   }
   return { ok: true, data: { ...data, card_ids } };
 }

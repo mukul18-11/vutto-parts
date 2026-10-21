@@ -43,10 +43,10 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
       actions={
         manager && (
           <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline" className="h-11">
+            <Button asChild variant="outline" className="h-12">
               <Link href={link("/stock/count")}>{t("count.title")}</Link>
             </Button>
-            <Button asChild variant="outline" className="h-11">
+            <Button asChild variant="outline" className="h-12">
               <Link href={link("/stock/quarantine")}>{t("quarantine.title")}</Link>
             </Button>
           </div>

@@ -55,7 +55,10 @@ export default async function PurchasingPage({ searchParams }: { searchParams: P
       ? list.order("is_overdue", { ascending: false }).order("expected_on", { ascending: true }).order("code")
       : list.order("created_at", { ascending: false }).order("code", { ascending: false });
 
-  const [draftN, sentN, closedN, allN, listRes, needsRes, suppliersRes, excessRes] = await Promise.all([
+  // One batch after the route guard. The open sent lines and the uom of unsourced parts are read
+  // up front (both small: open lines on sent POs, and parts with no preferred supplier, a superset
+  // of the unsourced ones) and matched below, so the page needs no third round trip.
+  const [draftN, sentN, closedN, allN, listRes, needsRes, suppliersRes, excessRes, openRes, uomRes] = await Promise.all([
     count(TAB_STATUSES.draft),
     count(TAB_STATUSES.sent),
     count(TAB_STATUSES.closed),
@@ -72,39 +75,24 @@ export default async function PurchasingPage({ searchParams }: { searchParams: P
       .select("part_id, sku, name, on_order, projected, target, excess")
       .eq("workshop_id", workshop.id)
       .order("sku"),
+    supabase
+      .from("po_lines")
+      .select("part_id, open_qty, po_id, purchase_orders!inner(code, status)")
+      .eq("workshop_id", workshop.id)
+      .gt("open_qty", 0)
+      .in("purchase_orders.status", ["sent", "partially_received"]),
+    supabase.from("parts").select("id, uom").is("preferred_supplier_id", null),
   ]);
-  for (const res of [draftN, sentN, closedN, allN, listRes, needsRes, suppliersRes, excessRes]) if (res.error) throw res.error;
+  for (const res of [draftN, sentN, closedN, allN, listRes, needsRes, suppliersRes, excessRes, openRes, uomRes]) {
+    if (res.error) throw res.error;
+  }
 
   const excess = excessRes.data ?? [];
   const needs = needsRes.data ?? [];
-  const [openRes, uomRes] = await Promise.all([
-    excess.length === 0
-      ? { data: [], error: null }
-      : supabase
-          .from("po_lines")
-          .select("part_id, open_qty, po_id, purchase_orders!inner(code, status)")
-          .eq("workshop_id", workshop.id)
-          .in(
-            "part_id",
-            excess.map((e) => e.part_id as string),
-          )
-          .gt("open_qty", 0)
-          .in("purchase_orders.status", ["sent", "partially_received"]),
-    needs.length === 0
-      ? { data: [], error: null }
-      : supabase
-          .from("parts")
-          .select("id, uom")
-          .in(
-            "id",
-            needs.map((n) => n.part_id),
-          ),
-  ]);
-  if (openRes.error) throw openRes.error;
-  if (uomRes.error) throw uomRes.error;
-  const uomOf = new Map(uomRes.data.map((p) => [p.id, p.uom]));
+  const uomOf = new Map((uomRes.data ?? []).map((p) => [p.id, p.uom]));
   const openByPart = new Map<string, { po_id: string; code: string; open_qty: number }[]>();
-  for (const l of openRes.data) {
+  const excessParts = new Set(excess.map((e) => e.part_id as string));
+  for (const l of (openRes.data ?? []).filter((x) => excessParts.has(x.part_id))) {
     const entry = { po_id: l.po_id, code: l.purchase_orders.code, open_qty: l.open_qty as number };
     openByPart.set(l.part_id, [...(openByPart.get(l.part_id) ?? []), entry]);
   }

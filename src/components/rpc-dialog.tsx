@@ -87,7 +87,7 @@ export function RpcDialog<P extends RpcEnvelope, T>(props: Props<P, T>) {
       <Button
         type="button"
         variant={props.triggerVariant ?? "outline"}
-        className={props.triggerClassName ?? "h-11"}
+        className={props.triggerClassName ?? "h-12"}
         data-testid={props.triggerTestId}
         disabled={props.disabled}
         onClick={() => changeOpen(true)}
@@ -167,7 +167,7 @@ export function RpcButton<P extends RpcEnvelope, T>({
       <Button
         type="button"
         variant={variant ?? "default"}
-        className={className ?? "h-11"}
+        className={className ?? "h-12"}
         data-testid={testId}
         disabled={disabled}
         onClick={() => submit(values)}

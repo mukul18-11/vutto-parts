@@ -23,27 +23,24 @@ export default async function CountBinPage({
   searchParams: Promise<SearchParams>;
 }) {
   const [{ binId }, sp] = await Promise.all([params, searchParams]);
-  const { user, workshop } = await requireRole("/stock/count", sp);
   if (!z.guid().safeParse(binId).success) notFound();
-  const t = await getT();
   const supabase = await createClient();
 
-  const binRes = await supabase
-    .from("bins")
-    .select("id, code, kind, count_requested_at")
-    .eq("id", binId)
-    .eq("workshop_id", workshop.id)
-    .maybeSingle();
-  if (binRes.error) throw binRes.error;
-  const bin = binRes.data;
-  if (!bin) notFound();
-
+  // One round trip with the route guard: the bin and its balances are keyed by the bin id (RLS
+  // scopes them; the workshop is checked once the guard resolves). STALE_COUNT compares against
+  // these balances, so the load time is taken before reading them.
   const loadedAt = new Date(requestNow()).toISOString();
-  const balRes = await supabase
-    .from("stock_balances")
-    .select("part_id, on_hand, parts(sku, name, name_hi, uom)")
-    .eq("bin_id", bin.id);
+  const [{ user, workshop }, t, binRes, balRes] = await Promise.all([
+    requireRole("/stock/count", sp),
+    getT(),
+    supabase.from("bins").select("id, workshop_id, code, kind, count_requested_at").eq("id", binId).maybeSingle(),
+    supabase.from("stock_balances").select("part_id, on_hand, parts(sku, name, name_hi, uom)").eq("bin_id", binId),
+  ]);
+  if (binRes.error) throw binRes.error;
   if (balRes.error) throw balRes.error;
+  const bin = binRes.data;
+  if (!bin || bin.workshop_id !== workshop.id) notFound();
+
   const items: CountItem[] = (balRes.data ?? [])
     .map((b) => {
       const p = b.parts as { sku: string; name: string; name_hi: string | null; uom: Uom };

@@ -1,8 +1,7 @@
 // Purchasing part A (SPEC §7.1-7.3, §10): requirement formula, draft generation, draft edits,
 // send_po and set_po_expected_on, acting as the demo users. Demand comes from confirmed job cards
 // (create_bike + confirm_job_card); issue history is inserted as postgres with explicit times.
-// No concurrency tests: the user dropped them for this prompt (SPEC §17 lists two concurrent
-// generate_draft_pos calls; not covered here).
+// SPEC §17's "two generate_draft_pos" is the one concurrency test here (P14).
 import type pg from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { clientAs, pgClient, type Client } from "./clients";
@@ -246,6 +245,31 @@ describe("generate_draft_pos (SPEC §7.1)", () => {
     expect(second).toMatchObject({ added: 0, changed: 0, removed: 0, unsourced: [] });
     expect(await poLines()).toEqual(before);
     expect(second.drafts.map((d) => d.po_id)).toEqual(first.drafts.map((d) => d.po_id));
+  });
+
+  it("SPEC §17: two concurrent runs leave the same POs and lines as one run", async () => {
+    await standardDemand();
+    // The manager and admin press "Generate draft POs" for NCR at the same moment.
+    const [a, b] = await Promise.all([
+      generate(),
+      rpc(admin, "generate_draft_pos", { p_workshop_id: NCR }).then((r) => expectOk<GenResult>(r)),
+    ]);
+    // The workshop lock serialises them: one adds both lines, the other finds nothing to change.
+    expect([a.added, b.added].sort()).toEqual([0, 2]);
+    expect(a.changed + b.changed + a.removed + b.removed).toBe(0);
+    const lines = await poLines();
+    expect(lines.map((l) => [l.sku, l.qty_ordered]).sort()).toEqual([
+      ["T-OIL", 23],
+      ["T-OIL-RE", 2],
+    ]);
+    const { rows } = await db.query(
+      `select supplier_id, count(*)::int as n from public.purchase_orders
+       where workshop_id = $1 and status = 'draft' group by supplier_id having count(*) > 1`,
+      [NCR],
+    );
+    expect(rows).toEqual([]);
+    expect(await generate()).toMatchObject({ added: 0, changed: 0, removed: 0 });
+    expect(await poLines()).toEqual(lines);
   });
 
   it("updates a suggested line when demand changes and removes it (and the empty draft) when demand is gone", async () => {

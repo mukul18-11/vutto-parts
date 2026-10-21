@@ -31,32 +31,40 @@ export default async function EmergencyDonePage({
   searchParams: Promise<SearchParams>;
 }) {
   const [{ lineId }, sp] = await Promise.all([params, searchParams]);
-  const { user, profile, workshop } = await requireRole("/store/emergency", sp);
   const buyId = z.guid().safeParse(sp.buy);
   if (!z.guid().safeParse(lineId).success || !buyId.success) notFound();
-  const t = await getT();
   const supabase = await createClient();
-  const link = (href: string) => withWs(href, profile.role, workshop.code);
   const warning = WARNINGS.find((w) => w === sp.warning) ?? null;
 
-  const [buyRes, rcvRes, binsRes] = await Promise.all([
+  // Two sequential round trips: the buy runs with the route guard (RLS scopes it; the workshop is
+  // checked once the guard resolves), then the bins and the receiving balance of its part.
+  const [{ user, profile, workshop }, t, buyRes] = await Promise.all([
+    requireRole("/store/emergency", sp),
+    getT(),
     supabase
       .from("v_emergency_buys_list")
-      .select("id, job_card_line_id, job_card_id, card_code, reg_no, part_id, sku, part_name, uom, vendor_name, qty, unit_price_paise, reference_price_paise, total_paise, qty_issued, qty_to_stock")
+      .select("id, workshop_id, job_card_line_id, job_card_id, card_code, reg_no, part_id, sku, part_name, uom, vendor_name, qty, unit_price_paise, reference_price_paise, total_paise, qty_issued, qty_to_stock")
       .eq("id", buyId.data)
-      .eq("workshop_id", workshop.id)
       .maybeSingle(),
+  ]);
+  if (buyRes.error) throw buyRes.error;
+  const link = (href: string) => withWs(href, profile.role, workshop.code);
+  const buy = buyRes.data;
+  if (!buy || buy.workshop_id !== workshop.id || buy.job_card_line_id !== lineId) notFound();
+
+  const [rcvRes, binsRes, balRes] = await Promise.all([
     supabase.from("bins").select("id, code").eq("workshop_id", workshop.id).eq("kind", "receiving").maybeSingle(),
     supabase.from("bins").select("id, code").eq("workshop_id", workshop.id).eq("kind", "normal").eq("is_active", true).order("code"),
+    supabase
+      .from("stock_balances")
+      .select("on_hand, bin:bins!inner(kind)")
+      .eq("workshop_id", workshop.id)
+      .eq("part_id", buy.part_id as string)
+      .eq("bin.kind", "receiving")
+      .maybeSingle(),
   ]);
-  for (const r of [buyRes, rcvRes, binsRes]) if (r.error) throw r.error;
-  const buy = buyRes.data;
-  if (!buy || buy.job_card_line_id !== lineId) notFound();
+  for (const r of [rcvRes, binsRes, balRes]) if (r.error) throw r.error;
   const rcv = rcvRes.data;
-  const balRes = rcv
-    ? await supabase.from("stock_balances").select("on_hand").eq("bin_id", rcv.id).eq("part_id", buy.part_id as string).maybeSingle()
-    : { data: null, error: null };
-  if (balRes.error) throw balRes.error;
 
   const uomKey = buy.uom as Enums["uom"];
   const uom = t(`enums.uom.${uomKey}`);

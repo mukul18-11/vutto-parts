@@ -7,7 +7,7 @@ import { Pager } from "@/components/pager";
 import { TabLink } from "@/components/tab-link";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { requireRole, type SearchParams } from "@/lib/auth";
+import { getDemoMeta, requireRole, type SearchParams } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import {
   demoPeriods,
@@ -30,7 +30,7 @@ const PAGE_SIZE = 100;
 /** The list behind the part-wait tile (SPEC §10): part_waits() for one period, footer from kpis(). */
 export default async function PartWaitPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const sp = await searchParams;
-  const { profile, workshop, workshops } = await requireRole("/metrics/part-wait", sp);
+  const [{ profile, workshop, workshops }, demoMeta] = await Promise.all([requireRole("/metrics/part-wait", sp), getDemoMeta()]);
   const t = await getT();
   const supabase = await createClient();
   const combined = isCombined(profile.role, sp.scope);
@@ -39,9 +39,7 @@ export default async function PartWaitPage({ searchParams }: { searchParams: Pro
   const waitingOnly = sp.waiting === "1";
   const page = parsePage(sp.page);
 
-  const meta = await supabase.from("demo_meta").select("anchor_date").maybeSingle();
-  if (meta.error) throw meta.error;
-  const anchor = meta.data?.anchor_date ?? null;
+  const anchor = demoMeta?.anchor_date ?? null;
   const header = (
     <PageHeader
       title={t("pages.partWait")}
